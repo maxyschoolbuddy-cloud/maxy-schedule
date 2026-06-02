@@ -1,0 +1,2215 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAXY Schedule — June 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wdth,wght@100,300;100,400;100,500;100,600;100,700&family=Noto+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<style>
+:root{
+  --bg:#0e0e10;--surface:#18181c;--surface2:#222228;
+  --border:#2e2e38;--border2:#3e3e50;
+  --text:#f0f0f4;--text2:#9090a8;--text3:#5a5a72;
+  --accent:#7c6af5;--accent2:#5d4de0;
+  --green:#22c97e;--green-bg:#0d2a1e;
+  --red:#f05a5a;--red-bg:#2a0d0d;
+  --amber:#f0b840;--blue:#4aa8f5;
+  --fb:#1877f2;--tt:#ee1d52;--yt:#ff0000;
+  --radius:10px;--radius-lg:16px;
+  --font:'Noto Sans Lao',sans-serif;--mono:'Noto Sans Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+.brand{font-size:15px;font-weight:600;letter-spacing:.5px;display:flex;align-items:center;gap:10px;}
+.brand-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.sync-badge{font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text3);display:flex;align-items:center;gap:6px;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.admin-btn{font-size:12px;font-family:var(--font);padding:6px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .2s;}
+.admin-btn:hover{background:var(--surface2);color:var(--text);}
+.admin-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+.main{max-width:1100px;margin:0 auto;padding:28px 20px;}
+.page-head{margin-bottom:24px;}
+.page-title{font-size:22px;font-weight:600;margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--text2);}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:28px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.stat-val{font-size:26px;font-weight:600;font-family:var(--mono);}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;}
+.stat-bar{height:3px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden;}
+.stat-fill{height:100%;background:var(--green);border-radius:2px;transition:width .5s;}
+
+.tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px;width:fit-content;}
+.tab{padding:7px 18px;font-size:13px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-radius:7px;font-family:var(--font);transition:all .15s;}
+.tab.on{background:var(--surface2);color:var(--text);border:1px solid var(--border2);}
+.tab:hover:not(.on){color:var(--text);}
+
+/* CALENDAR */
+.cal-grid{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.cal-head{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:var(--surface2);}
+.cal-head-cell{padding:10px 4px;text-align:center;font-size:11px;font-weight:500;color:var(--text3);border-right:1px solid var(--border);letter-spacing:.5px;min-width:0;}
+.cal-head-cell:last-child{border-right:none;}
+.cal-body{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));}
+.day{min-height:110px;padding:8px 6px;border-right:1px solid var(--border);border-top:1px solid var(--border);min-width:0;overflow:hidden;}
+.day:nth-child(7n){border-right:none;}
+.day.empty{background:var(--bg);opacity:.4;}
+.day.today{background:rgba(124,106,245,.06);}
+.day-num{font-size:12px;font-family:var(--mono);color:var(--text3);margin-bottom:6px;}
+.day.today .day-num{background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;}
+
+.cal-tag{font-size:10px;padding:3px 5px 4px;border-radius:6px;margin-bottom:3px;display:flex;flex-direction:column;gap:2px;cursor:pointer;border:1px solid transparent;transition:opacity .15s;}
+.cal-tag:hover{opacity:.82;}
+.cal-tag.done{opacity:.38;}
+.cal-tag-top{display:flex;align-items:center;gap:3px;}
+.cal-tag-top input[type=checkbox]{width:11px;height:11px;cursor:pointer;flex-shrink:0;}
+.cal-tag-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
+.cal-mini-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden;}
+.cal-mini-fill{height:100%;border-radius:2px;transition:width .4s;}
+.cal-tag-staff{display:flex;gap:2px;margin-top:1px;}
+.tag-av{width:11px;height:11px;border-radius:50%;font-size:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;}
+
+/* BADGES */
+.plat-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;letter-spacing:.3px;white-space:nowrap;}
+.plat-fb{background:rgba(24,119,242,.2);color:var(--fb);}
+.plat-tiktok{background:rgba(238,29,82,.2);color:var(--tt);}
+.plat-youtube{background:rgba(255,0,0,.2);color:var(--yt);}
+.plat-other{background:rgba(124,106,245,.2);color:var(--accent);}
+
+/* STAGE CHIPS */
+.stage-chip{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;border:1px solid transparent;}
+.pct-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:var(--mono);white-space:nowrap;}
+.lock-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(90,90,114,.15);color:var(--text3);border:1px solid rgba(90,90,114,.2);white-space:nowrap;}
+
+/* PROGRESS BAR */
+.prog-bar-wrap{background:var(--border);border-radius:4px;overflow:hidden;height:6px;flex:1;}
+.prog-bar-fill{height:100%;border-radius:4px;transition:width .4s;}
+.prog-bar-row{display:flex;align-items:center;gap:8px;}
+.prog-pct-label{font-size:11px;font-weight:700;font-family:var(--mono);min-width:32px;text-align:right;}
+
+/* FILTER */
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.f-btn{padding:5px 14px;font-size:12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font);transition:all .15s;}
+.f-btn.on{background:var(--surface2);color:var(--text);border-color:var(--border2);}
+.list-items{display:flex;flex-direction:column;gap:12px;}
+
+/* EPISODE CARD */
+.ep-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .2s;}
+.ep-card:hover{border-color:var(--border2);}
+.ep-card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);}
+.ep-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.prog-tag{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap;}
+.ep-body{padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+
+/* SHOOT ROW */
+.shoot-row{background:rgba(34,201,126,.05);border:1px solid rgba(34,201,126,.15);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color .2s;}
+.shoot-row:hover{border-color:rgba(34,201,126,.35);}
+.shoot-row-top{display:flex;align-items:center;gap:10px;padding:10px 14px;}
+.shoot-row-bar{padding:0 14px 10px;}
+.shoot-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;min-width:60px;}
+.shoot-title{font-size:13px;font-weight:500;flex:1;}
+
+/* CLIP ROWS */
+.clips-section{display:flex;flex-direction:column;gap:6px;}
+.clips-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.clip-group{background:var(--surface2);border-radius:8px;border:1px solid var(--border);overflow:hidden;}
+.clip-group-head{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);}
+.clip-label{font-size:13px;font-weight:600;color:var(--text);flex:1;}
+.clip-post-date{font-size:11px;color:var(--text3);}
+.clip-rows{display:flex;flex-direction:column;}
+.clip-row{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .15s;}
+.clip-row:hover{background:rgba(255,255,255,.03);}
+.clip-row+.clip-row{border-top:1px solid var(--border);}
+.clip-row.locked{opacity:.6;cursor:not-allowed;}
+.clip-plat{min-width:68px;}
+
+/* STAFF */
+.staff-avatars{display:flex;gap:3px;align-items:center;}
+.staff-av{width:20px;height:20px;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;transition:transform .15s;border:2px solid var(--bg);flex-shrink:0;}
+.staff-av:hover{transform:scale(1.15);}
+
+/* DETAIL PANEL */
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:150;opacity:0;pointer-events:none;transition:opacity .25s;}
+.detail-overlay.open{opacity:1;pointer-events:all;}
+.detail-panel{position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--surface);border-left:1px solid var(--border);z-index:160;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;}
+.detail-panel.open{transform:translateX(0);}
+.dp-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;}
+.dp-head-info{flex:1;min-width:0;}
+.dp-title{font-size:15px;font-weight:600;margin-bottom:6px;}
+.dp-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.dp-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.dp-close:hover{background:var(--surface2);color:var(--text);}
+.dp-body{flex:1;overflow-y:auto;padding:20px;}
+.dp-section{margin-bottom:22px;}
+.dp-section-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.dp-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:10px;}
+
+/* STAGE SELECTOR — SHOOT */
+.stage-select{display:flex;flex-direction:column;gap:6px;}
+.stage-option{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:all .15s;user-select:none;}
+.stage-option:hover{border-color:var(--border2);background:var(--surface2);}
+.stage-option.active{border-color:transparent;}
+.stage-option-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.stage-option-label{font-size:13px;font-weight:500;flex:1;}
+.stage-option-pct{font-size:12px;font-family:var(--mono);font-weight:700;opacity:.7;}
+.stage-option-check{font-size:14px;opacity:0;}
+.stage-option.active .stage-option-check{opacity:1;}
+
+/* POST STAGE SELECTOR */
+.post-stage-select{display:flex;flex-direction:column;gap:8px;}
+.post-stage-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:all .15s;user-select:none;}
+.post-stage-btn:hover:not(.disabled){border-color:var(--border2);background:var(--surface2);}
+.post-stage-btn.active{border-color:transparent;}
+.post-stage-btn.disabled{opacity:.45;cursor:not-allowed;}
+.post-stage-icon{font-size:18px;flex-shrink:0;}
+.post-stage-info{flex:1;}
+.post-stage-label{font-size:13px;font-weight:600;}
+.post-stage-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.post-stage-check{font-size:14px;opacity:0;}
+.post-stage-btn.active .post-stage-check{opacity:1;}
+.lock-notice{background:rgba(90,90,114,.1);border:1px solid rgba(90,90,114,.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:12px;}
+
+/* STAFF PICKER */
+.staff-picker{display:flex;flex-wrap:wrap;gap:8px;}
+.staff-pick-chip{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:20px;border:1px solid var(--border);cursor:pointer;transition:all .15s;user-select:none;}
+.staff-pick-chip:hover{border-color:var(--border2);}
+.staff-pick-chip.assigned{border-color:transparent;}
+.sp-av{width:22px;height:22px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+.sp-name{font-size:12px;font-weight:500;}
+.sp-check{font-size:12px;opacity:0;}
+.staff-pick-chip.assigned .sp-check{opacity:1;}
+
+.dp-textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text);font-family:var(--font);resize:none;transition:border-color .2s;min-height:80px;}
+.dp-textarea:focus{outline:none;border-color:var(--accent);}
+.dp-textarea::placeholder{color:var(--text3);}
+.done-btn{flex:1;padding:10px;background:var(--green-bg);border:1px solid rgba(34,201,126,.3);border-radius:8px;color:var(--green);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .2s;}
+.done-btn.is-done{background:var(--green);color:#fff;border-color:var(--green);}
+.done-btn.disabled{opacity:.4;cursor:not-allowed;}
+.save-btn{padding:10px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font);transition:background .2s;}
+.save-btn:hover{background:var(--accent2);}
+
+/* TEAM VIEW */
+.staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+.staff-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:border-color .2s;}
+.staff-card:hover{border-color:var(--border2);}
+.staff-card-head{padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.staff-big-av{width:40px;height:40px;border-radius:50%;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+.staff-card-name{font-size:14px;font-weight:600;}
+.staff-card-count{font-size:12px;color:var(--text3);}
+.staff-card-body{padding:12px 16px;display:none;}
+.staff-card.expanded .staff-card-body{display:block;}
+.staff-task-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);cursor:pointer;transition:color .15s;}
+.staff-task-item:last-child{border-bottom:none;}
+.staff-task-item:hover{color:var(--text);}
+.no-staff{text-align:center;padding:40px;color:var(--text3);font-size:14px;grid-column:1/-1;}
+
+/* ADMIN */
+.admin-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:24px;display:flex;flex-direction:column;gap:20px;}
+.admin-section{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.admin-section-head{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;}
+.admin-section-head h3{font-size:13px;font-weight:600;flex:1;}
+.chevron{font-size:11px;color:var(--text3);transition:transform .2s;}
+.admin-section-head.open .chevron{transform:rotate(180deg);}
+.admin-section-body{padding:16px;display:none;}
+.admin-section-body.open{display:block;}
+.form-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.form-group input[type=text],.form-group input[type=date],.form-group input[type=time],.form-group input[type=number],.form-group select{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:var(--font);}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--accent);}
+.form-group select option{background:var(--surface2);}
+.form-group input[type=color]{width:44px;height:36px;padding:2px 4px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;}
+.plat-checks{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;}
+.plat-check-label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;user-select:none;}
+.plat-check-label input{width:13px;height:13px;cursor:pointer;}
+.add-btn{padding:8px 18px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:13px;cursor:pointer;font-family:var(--font);font-weight:500;white-space:nowrap;transition:background .2s;}
+.add-btn:hover{background:var(--accent2);}
+.edit-btn,.del-btn{padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--font);transition:all .2s;}
+.edit-btn{color:var(--text3);}
+.edit-btn:hover{background:var(--surface2);color:var(--text);}
+.del-btn{color:var(--text3);}
+.del-btn:hover{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.save-inline-btn{padding:4px 10px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:11px;cursor:pointer;font-family:var(--font);}
+.admin-table{width:100%;border-collapse:collapse;font-size:13px;}
+.admin-table th{text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);}
+.admin-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle;}
+.admin-table tr:last-child td{border-bottom:none;}
+.admin-table tr:hover td{background:rgba(255,255,255,.02);}
+.admin-table input[type=text]{background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:4px 8px;font-size:12px;color:var(--text);font-family:var(--font);width:100%;}
+.admin-table input[type=color]{width:32px;height:28px;padding:1px 3px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;}
+.tip-box{font-size:12px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;line-height:1.8;margin-bottom:12px;}
+
+/* EXPORT MODAL */
+.export-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;}
+.export-overlay.open{opacity:1;pointer-events:all;}
+.export-modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;width:min(500px,92vw);display:flex;flex-direction:column;gap:20px;}
+.export-title{font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px;}
+.export-sub{font-size:13px;color:var(--text2);margin-top:-12px;}
+.export-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.export-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;}
+.export-card:hover{border-color:var(--accent);background:rgba(124,106,245,.08);}
+.export-card-icon{font-size:28px;}
+.export-card-label{font-size:13px;font-weight:600;color:var(--text);}
+.export-card-desc{font-size:11px;color:var(--text3);line-height:1.4;}
+.export-close{align-self:flex-end;padding:6px 16px;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--text2);cursor:pointer;font-family:var(--font);font-size:13px;}
+.export-close:hover{background:var(--surface2);color:var(--text);}
+.export-progress{font-size:12px;color:var(--text3);text-align:center;padding:4px 0;display:none;}
+
+.login-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:200;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;width:320px;}
+.login-title{font-size:17px;font-weight:600;margin-bottom:6px;}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:22px;}
+.login-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;color:var(--text);font-family:var(--font);margin-bottom:12px;}
+.login-input:focus{outline:none;border-color:var(--accent);}
+.login-btn{width:100%;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font);}
+.login-err{font-size:12px;color:var(--red);margin-bottom:10px;text-align:center;}
+.cancel-link{display:block;text-align:center;margin-top:12px;font-size:12px;color:var(--text3);cursor:pointer;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--text);z-index:300;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{border-color:rgba(34,201,126,.4);}
+.toast.err{border-color:rgba(240,90,90,.4);}
+.loading{text-align:center;padding:60px;color:var(--text3);font-size:14px;}
+.empty-state{text-align:center;padding:40px;color:var(--text3);font-size:14px;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><div class="brand-dot"></div>MAXY SCHEDULE — June 2026</div>
+  <div class="topbar-right">
+    <div class="sync-badge"><div class="sync-dot"></div><span id="sync-text">Syncing...</span></div>
+    <button class="admin-btn" onclick="openExport()">📤 Export</button>
+    <button class="admin-btn" id="admin-toggle-btn" onclick="toggleAdminMode()">🔐 Admin</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-head">
+    <div class="page-title">🎬 Shoot &amp; Post Schedule</div>
+    <div class="page-sub">BIGBEAR &amp; SCHOOLBUDDY · ຕິດຕາມ status ຖ່າຍ / ໂພສ · sync 15 ວິ</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="s-ep">—</div><div class="stat-lbl">Episodes</div></div>
+    <div class="stat"><div class="stat-val" id="s-clips" style="color:var(--accent)">—</div><div class="stat-lbl">Clips</div></div>
+    <div class="stat"><div class="stat-val" id="s-shoot-pct" style="color:var(--blue)">—</div><div class="stat-lbl">% ຖ່າຍ/ຕັດ</div><div class="stat-bar"><div class="stat-fill" id="s-shoot-bar" style="width:0%;background:var(--blue)"></div></div></div>
+    <div class="stat"><div class="stat-val" id="s-post-pct" style="color:var(--green)">—</div><div class="stat-lbl">% ໂພສ</div><div class="stat-bar"><div class="stat-fill" id="s-post-bar" style="width:0%"></div></div></div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="admin-panel" id="admin-panel" style="display:none">
+    <div class="admin-section">
+      <div class="admin-section-head" onclick="toggleSection(this)"><h3>🎨 Programme</h3><span class="chevron">▼</span></div>
+      <div class="admin-section-body">
+        <div class="form-row">
+          <div class="form-group"><label>ຊື່</label><input type="text" id="p-name" placeholder="ຊື່ລາຍການ" style="width:180px"></div>
+          <div class="form-group"><label>ສີ</label><input type="color" id="p-color" value="#7c6af5"></div>
+          <div class="form-group"><label>&nbsp;</label><button class="add-btn" onclick="addProgramme()">+ ເພີ່ມ</button></div>
+        </div>
+        <table class="admin-table"><thead><tr><th>ຊື່</th><th>ສີ</th><th>EP</th><th></th></tr></thead><tbody id="prog-tbody"></tbody></table>
+      </div>
+    </div>
+    <div class="admin-section">
+      <div class="admin-section-head" onclick="toggleSection(this)"><h3>👤 ພະນັກງານ</h3><span class="chevron">▼</span></div>
+      <div class="admin-section-body">
+        <div class="form-row">
+          <div class="form-group"><label>ຊື່</label><input type="text" id="st-name" placeholder="ຊື່ພະນັກງານ" style="width:160px"></div>
+          <div class="form-group"><label>ສີ</label><input type="color" id="st-color" value="#7c6af5"></div>
+          <div class="form-group"><label>&nbsp;</label><button class="add-btn" onclick="addStaff()">+ ເພີ່ມ</button></div>
+        </div>
+        <table class="admin-table"><thead><tr><th>ຊື່</th><th>ສີ</th><th></th></tr></thead><tbody id="staff-tbody"></tbody></table>
+      </div>
+    </div>
+    <div class="admin-section">
+      <div class="admin-section-head open" onclick="toggleSection(this)"><h3>📅 ເພີ່ມ Schedule</h3><span class="chevron">▼</span></div>
+      <div class="admin-section-body open">
+        <div class="tip-box">💡 ເພີ່ມ Shoot ຄັ້ງດຽວ ແລ້ວ ເພີ່ມ Post clip ໄດ້ຫຼາຍຄັ້ງ — Shoot date ດຽວກັນຈະ <b style="color:var(--green)">reuse ອັດຕະໂນມັດ</b></div>
+        <div class="form-row">
+          <div class="form-group"><label>Programme</label><select id="a-prog" style="min-width:150px"></select></div>
+          <div class="form-group"><label>Shoot Date</label><input type="date" id="a-shoot"></div>
+          <div class="form-group"><label>Post Date</label><input type="date" id="a-post"></div>
+          <div class="form-group"><label>ເວລາໂພສ</label><input type="time" id="a-time" style="width:110px"></div>
+          <div class="form-group"><label>Clip #</label><input type="number" id="a-clip" value="1" min="1" max="99" style="width:70px"></div>
+          <div class="form-group"><label>Clip Label</label><input type="text" id="a-label" placeholder="Full Video, Short 1..." style="width:150px"></div>
+          <div class="form-group"><label>Platform</label>
+            <div class="plat-checks">
+              <label class="plat-check-label"><input type="checkbox" id="a-fb" checked> <span class="plat-badge plat-fb">FB</span></label>
+              <label class="plat-check-label"><input type="checkbox" id="a-tt" checked> <span class="plat-badge plat-tiktok">TT</span></label>
+              <label class="plat-check-label"><input type="checkbox" id="a-yt" checked> <span class="plat-badge plat-youtube">YT</span></label>
+            </div>
+          </div>
+          <div class="form-group"><label>&nbsp;</label><button class="add-btn" onclick="adminAddItem()">+ ເພີ່ມ</button></div>
+        </div>
+        <table class="admin-table"><thead><tr><th>ລາຍການ</th><th>🎬 Shoot</th><th>📤 Post</th><th>ເວລາ</th><th>Clip</th><th>Plat</th><th>Label</th><th>🎬%</th><th>📤</th><th></th></tr></thead>
+        <tbody id="admin-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('cal',this)">📅 Calendar</button>
+    <button class="tab" onclick="switchTab('list',this)">📋 List</button>
+    <button class="tab" onclick="switchTab('team',this)">👤 ທີມ</button>
+  </div>
+
+  <div id="cal-view">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <button onclick="calNav(-1)" style="padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;font-size:14px;transition:all .15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='var(--surface)'">‹</button>
+      <span id="cal-month-label" style="font-size:15px;font-weight:600;color:var(--text)"></span>
+      <button onclick="calNav(1)"  style="padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;font-size:14px;transition:all .15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='var(--surface)'">›</button>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-head">
+        <div class="cal-head-cell">MON ຈັນ</div><div class="cal-head-cell">TUE ອັງ</div>
+        <div class="cal-head-cell">WED ພຸດ</div><div class="cal-head-cell">THU ພະ</div>
+        <div class="cal-head-cell">FRI ສຸກ</div><div class="cal-head-cell">SAT ເສົາ</div>
+        <div class="cal-head-cell">SUN ອາ</div>
+      </div>
+      <div class="cal-body" id="cal-body"><div class="loading">ກຳລັງໂຫຼດ...</div></div>
+    </div>
+  </div>
+  <div id="list-view" style="display:none">
+    <div class="filter-row" id="filter-row"></div>
+    <div class="list-items" id="list-body"></div>
+  </div>
+  <div id="team-view" style="display:none">
+    <div class="staff-grid" id="staff-grid"></div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="dp-head">
+    <div class="dp-head-info">
+      <div class="dp-title" id="dp-title">—</div>
+      <div class="dp-meta" id="dp-meta"></div>
+      <div id="dp-progress-wrap" style="display:none">
+        <div class="prog-bar-row">
+          <div class="prog-bar-wrap"><div class="prog-bar-fill" id="dp-prog-fill" style="width:0%"></div></div>
+          <span class="prog-pct-label" id="dp-prog-pct">0%</span>
+        </div>
+      </div>
+    </div>
+    <button class="dp-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="dp-body">
+    <div class="dp-section" id="dp-stage-section">
+      <div class="dp-section-title" id="dp-stage-title">ຂັ້ນຕອນ</div>
+      <div id="dp-stages"></div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-section-title">ມອບໃຫ້</div>
+      <div class="staff-picker" id="dp-staff"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;display:none" id="dp-staff-empty">ເພີ່ມພະນັກງານໃນ Admin Panel</div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-section-title">ໝາຍເຫດ</div>
+      <textarea class="dp-textarea" id="dp-comment" placeholder="ພິມ comment..."></textarea>
+    </div>
+  </div>
+  <div class="dp-footer">
+    <button class="done-btn" id="dp-done-btn" onclick="dpToggleDone()">☐ ສຳເລັດ</button>
+    <button class="save-btn" onclick="dpSave()">💾 Save</button>
+  </div>
+</div>
+
+<div class="login-overlay" id="login-overlay" style="display:none">
+  <div class="login-box">
+    <div class="login-title">🔐 Admin Login</div>
+    <div class="login-sub">ໃສ່ລະຫັດຜ່ານ</div>
+    <div class="login-err" id="login-err" style="display:none">❌ ລະຫັດຜ່ານບໍ່ຖືກ</div>
+    <input class="login-input" type="password" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="login-btn" onclick="checkPw()">ເຂົ້າໃຊ້</button>
+    <span class="cancel-link" onclick="closeLogin()">ຍົກເລີກ</span>
+  </div>
+</div>
+<!-- EXPORT MODAL -->
+<div class="export-overlay" id="export-overlay" onclick="closeExport()">
+  <div class="export-modal" onclick="event.stopPropagation()">
+    <div class="export-title">📤 Export ຂໍ້ມູນ</div>
+    <div class="export-sub">ທຸກ format ລວມຂໍ້ມູນຄົບຖ້ວນໃນການ export ຄັ້ງດຽວ</div>
+    <div class="export-cards">
+      <div class="export-card" onclick="exportExcel()">
+        <div class="export-card-icon">📊</div>
+        <div class="export-card-label">Excel</div>
+        <div class="export-card-desc">4 sheets: ສະຫຼຸບ, ລາຍລະອຽດ, ພະນັກງານ, Platform<br>ເປີດໄດ້ໃນ Excel / Google Sheets</div>
+      </div>
+      <div class="export-card" onclick="exportCSV()">
+        <div class="export-card-icon">📋</div>
+        <div class="export-card-label">CSV</div>
+        <div class="export-card-desc">ໄຟລ໌ CSV ລວມ<br>ຂໍ້ມູນທຸກ episode &amp; clip</div>
+      </div>
+      <div class="export-card" onclick="exportReport()">
+        <div class="export-card-icon">📄</div>
+        <div class="export-card-label">HTML Report</div>
+        <div class="export-card-desc">ເປີດ tab ໃໝ່<br>Print → Save as PDF ໄດ້</div>
+      </div>
+    </div>
+    <div class="export-progress" id="export-progress">⏳ ກຳລັງສ້າງໄຟລ໌...</div>
+    <button class="export-close" onclick="closeExport()">ປິດ</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://rmzujpqjcnttqjujkang.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtenVqcHFqY250dHFqdWprYW5nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyOTY3NTQsImV4cCI6MjA5NTg3Mjc1NH0.3AEy-TlqBVtn2jmfZsiKhJaMVbnWasxLyQopGniRnug';
+const ADMIN_PASSWORD='maxy2026';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const LEGACY_COLORS={school:'#22c97e',podcast:'#f0b840',live:'#f05a5a',talk:'#7c6af5',gaming:'#4aa8f5',hl:'#f09060',bts:'#9090a8'};
+const LEGACY_NAMES={school:'School Buddy',podcast:'Podcast',live:'LIVE',talk:'Talk Show',gaming:'Gaming',hl:'Highlights',bts:'BTS'};
+const PLAT_INFO={fb:{label:'Facebook',short:'FB',cls:'plat-fb'},tiktok:{label:'TikTok',short:'TikTok',cls:'plat-tiktok'},youtube:{label:'YouTube',short:'YouTube',cls:'plat-youtube'}};
+const PLAT_COLORS={fb:'#1877f2',tiktok:'#ee1d52',youtube:'#ff0000'};
+const STAFF_PALETTE=['#f05a5a','#f0b840','#22c97e','#4aa8f5','#7c6af5','#ee1d52','#f09060','#9090a8','#e040fb','#00bcd4'];
+
+// ── SHOOT stages (with %) ──
+const SHOOT_STAGES=[
+  {id:'todo',     label:'ຍັງບໍ່ເລີ່ມ', pct:0,   color:'#5a5a72'},
+  {id:'shooting', label:'ກຳລັງຖ່າຍ',   pct:25,  color:'#f0b840'},
+  {id:'editing',  label:'ຕັດຕໍ່',        pct:50,  color:'#4aa8f5'},
+  {id:'review',   label:'ກວດສອບ',       pct:75,  color:'#7c6af5'},
+  {id:'ready',    label:'ພ້ອມໂພສ ✓',    pct:100, color:'#22c97e'},
+];
+// ── POST stages ──
+const POST_STAGES=[
+  {id:'waiting',   label:'ລໍຖ້າ',      sub:'ຕ້ອງໃຫ້ທີມຕັດຕໍ່ຮອດ ພ້ອມໂພສ',  locked:true,  icon:'🔒', color:'#5a5a72'},
+  {id:'scheduled', label:'Schedule',   sub:'ກຳໜົດໂພສແລ້ວ',                  locked:false, icon:'📅', color:'#f0b840'},
+  {id:'posted',    label:'ໂພສແລ້ວ ✓', sub:'ໂພສສຳເລັດ',                      locked:false, icon:'✅', color:'#22c97e'},
+];
+
+const SEED=[
+  {prog:'school',shoot:'2026-05-25',post:'2026-06-01'},{prog:'podcast',shoot:'2026-05-26',post:'2026-06-02'},
+  {prog:'live',shoot:'2026-05-27',post:'2026-06-03'},{prog:'talk',shoot:'2026-05-28',post:'2026-06-04'},
+  {prog:'gaming',shoot:'2026-05-29',post:'2026-06-05'},{prog:'school',shoot:'2026-06-01',post:'2026-06-08'},
+  {prog:'podcast',shoot:'2026-06-02',post:'2026-06-09'},{prog:'live',shoot:'2026-06-03',post:'2026-06-10'},
+  {prog:'talk',shoot:'2026-06-04',post:'2026-06-11'},{prog:'gaming',shoot:'2026-06-05',post:'2026-06-12'},
+  {prog:'hl',shoot:'2026-06-06',post:'2026-06-13'},{prog:'bts',shoot:'2026-06-07',post:'2026-06-14'},
+  {prog:'school',shoot:'2026-06-08',post:'2026-06-15'},{prog:'podcast',shoot:'2026-06-09',post:'2026-06-16'},
+  {prog:'live',shoot:'2026-06-10',post:'2026-06-17'},{prog:'talk',shoot:'2026-06-11',post:'2026-06-18'},
+  {prog:'gaming',shoot:'2026-06-12',post:'2026-06-19'},{prog:'hl',shoot:'2026-06-13',post:'2026-06-20'},
+  {prog:'bts',shoot:'2026-06-14',post:'2026-06-21'},{prog:'school',shoot:'2026-06-15',post:'2026-06-22'},
+  {prog:'podcast',shoot:'2026-06-16',post:'2026-06-23'},{prog:'live',shoot:'2026-06-17',post:'2026-06-24'},
+  {prog:'talk',shoot:'2026-06-18',post:'2026-06-25'},{prog:'gaming',shoot:'2026-06-19',post:'2026-06-26'},
+  {prog:'hl',shoot:'2026-06-20',post:'2026-06-27'},{prog:'bts',shoot:'2026-06-21',post:'2026-06-28'},
+  {prog:'school',shoot:'2026-06-22',post:'2026-06-29'},{prog:'podcast',shoot:'2026-06-23',post:'2026-06-30'},
+  {prog:'hl',shoot:'2026-06-27',post:'2026-07-04'},{prog:'bts',shoot:'2026-06-28',post:'2026-07-05'},
+];
+
+let items=[],statusMap={},progList=[],progMap={};
+let staffList=JSON.parse(localStorage.getItem('maxy_staff')||'[]');
+let curTab='cal',curFilter='all',isAdmin=false,detailItemId=null;
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(); // local month 0-11
+
+const MONTHS_LO=['ມັງກອນ','ກຸມພາ','ມີນາ','ເມສາ','ພຶດສະພາ','ມິຖຸນາ','ກໍລະກົດ','ສິງຫາ','ກັນຍາ','ຕຸລາ','ພະຈິກ','ທັນວາ'];
+
+const _t=new Date();
+const TODAY=`${_t.getFullYear()}-${String(_t.getMonth()+1).padStart(2,'0')}-${String(_t.getDate()).padStart(2,'0')}`;
+
+// ── HELPERS ──
+function hexToRgba(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${a})`;}
+function initials(name){return name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function progBadgeStyle(color){return `background:${hexToRgba(color,.15)};color:${color};border:1px solid ${hexToRgba(color,.3)}`;}
+
+function parseNote(note){
+  if(!note)return{clip:1,platform:null,label:'',postTime:''};
+  try{const o=JSON.parse(note);if(o&&(o.clip!==undefined||o.platform))return{clip:o.clip||1,platform:o.platform||null,label:o.label||o.userNote||'',postTime:o.postTime||''};}catch(_){}
+  return{clip:1,platform:null,label:note,postTime:''};
+}
+function makeNote(clip,platform,label,postTime){return JSON.stringify({clip:parseInt(clip)||1,platform,label:label||'',postTime:postTime||''});}
+
+function parseComment(c){
+  if(!c)return{text:'',staff:[],stage:null};
+  try{const o=JSON.parse(c);if(o&&o.v===1)return{text:o.text||'',staff:o.staff||[],stage:o.stage||null};}catch(_){}
+  return{text:c,staff:[],stage:null};
+}
+function makeComment(text,staff,stage){return JSON.stringify({v:1,text:text||'',staff:staff||[],stage:stage||null});}
+
+function findProg(pid,emb){
+  const f=progList.find(p=>p.id===pid);if(f)return f;
+  if(emb)return{id:emb.id,displayName:LEGACY_NAMES[emb.name]||emb.emoji||emb.name,color:(emb.badge_color&&emb.badge_color.startsWith('#'))?emb.badge_color:(LEGACY_COLORS[emb.name]||'#7c6af5')};
+  return{displayName:'—',color:'#7c6af5'};
+}
+
+// ── STAGE LOGIC ──
+function getStage(itemId,itemType){
+  const raw=parseComment(statusMap[itemId]?.comment).stage;
+  if(itemType==='shoot'){
+    // default = 'todo'; valid ids from SHOOT_STAGES
+    return SHOOT_STAGES.find(s=>s.id===raw)?raw:'todo';
+  } else {
+    return POST_STAGES.find(s=>s.id===raw)?raw:'waiting';
+  }
+}
+function getShootStageInfo(stageId){return SHOOT_STAGES.find(s=>s.id===stageId)||SHOOT_STAGES[0];}
+function getPostStageInfo(stageId){return POST_STAGES.find(s=>s.id===stageId)||POST_STAGES[0];}
+function getShootPct(itemId){return getShootStageInfo(getStage(itemId,'shoot')).pct;}
+
+// Find the shoot that "owns" a post item
+function getShootForPost(postItem){
+  return items.filter(sh=>sh.type==='shoot'&&sh.programme_id===postItem.programme_id&&sh.scheduled_date<=postItem.scheduled_date)
+    .sort((a,b)=>b.scheduled_date.localeCompare(a.scheduled_date))[0];
+}
+function isPostUnlocked(postItem){
+  const sh=getShootForPost(postItem);
+  if(!sh)return false;
+  return getStage(sh.id,'shoot')==='ready';
+}
+
+function getAssignedStaff(itemId){return parseComment(statusMap[itemId]?.comment).staff||[];}
+function staffAvatarsHtml(itemId,cls=''){
+  return getAssignedStaff(itemId).slice(0,3).map(sid=>{
+    const st=staffList.find(s=>s.id===sid);
+    if(!st)return'';
+    return `<div class="staff-av${cls?' '+cls:''}" style="background:${st.color}" title="${st.name}">${initials(st.name)}</div>`;
+  }).join('');
+}
+
+// ── MINI PROGRESS BAR HTML (for list/team) ──
+function miniBarHtml(pct,color){
+  return `<div style="display:flex;align-items:center;gap:6px;flex:1">
+    <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+    <span class="prog-pct-label" style="color:${color}">${pct}%</span>
+  </div>`;
+}
+
+// ── STAGE CHIP HTML ──
+function shootChipHtml(itemId){
+  const s=getShootStageInfo(getStage(itemId,'shoot'));
+  return `<span class="pct-badge" style="background:${hexToRgba(s.color,.15)};color:${s.color};border:1px solid ${hexToRgba(s.color,.25)}">${s.pct}%</span>`;
+}
+function postChipHtml(postItem){
+  const unlocked=isPostUnlocked(postItem);
+  const stageId=getStage(postItem.id,'post');
+  if(!unlocked||stageId==='waiting'){
+    return `<span class="lock-badge">🔒 ລໍຖ້າ</span>`;
+  }
+  const s=getPostStageInfo(stageId);
+  return `<span class="stage-chip" style="background:${hexToRgba(s.color,.15)};color:${s.color};border-color:${hexToRgba(s.color,.3)}">${s.icon} ${s.label}</span>`;
+}
+
+// ── INIT ──
+async function init(){
+  setSyncText('ກຳລັງເຊື່ອມ...');
+  await loadProgs();await seedIfEmpty();await loadAll();
+  setSyncText('Synced ✓');setInterval(loadAll,15000);
+}
+async function loadProgs(){
+  const{data}=await sb.from('programmes').select('*').order('id');
+  if(data&&data.length>0){
+    progList=data.map(p=>({id:p.id,key:p.name,displayName:LEGACY_NAMES[p.name]||p.emoji||p.name,color:(p.badge_color&&p.badge_color.startsWith('#'))?p.badge_color:(LEGACY_COLORS[p.name]||'#7c6af5')}));
+    progList.forEach(p=>{progMap[p.key]=p.id;progMap[p.id]=p.id;});return;
+  }
+  const seeds=[{name:'school',emoji:'School Buddy',badge_color:'#22c97e'},{name:'podcast',emoji:'Podcast',badge_color:'#f0b840'},{name:'live',emoji:'LIVE',badge_color:'#f05a5a'},{name:'talk',emoji:'Talk Show',badge_color:'#7c6af5'},{name:'gaming',emoji:'Gaming',badge_color:'#4aa8f5'},{name:'hl',emoji:'Highlights',badge_color:'#f09060'},{name:'bts',emoji:'BTS',badge_color:'#9090a8'}];
+  for(const s of seeds){const{data:d}=await sb.from('programmes').insert(s).select().single();if(d){progMap[d.name]=d.id;progMap[d.id]=d.id;}}
+  await loadProgs();
+}
+async function seedIfEmpty(){
+  const{count}=await sb.from('schedule_items').select('*',{count:'exact',head:true});
+  if(count>0)return;
+  for(const s of SEED){
+    const pid=progMap[s.prog];if(!pid)continue;
+    const{data:sh}=await sb.from('schedule_items').insert({programme_id:pid,type:'shoot',scheduled_date:s.shoot}).select().single();
+    if(sh)await sb.from('item_status').insert({item_id:sh.id,done:false,comment:makeComment('',[],'todo')});
+    for(const plat of['fb','tiktok','youtube']){
+      const{data:po}=await sb.from('schedule_items').insert({programme_id:pid,type:'post',scheduled_date:s.post,note:makeNote(1,plat,'','')}).select().single();
+      if(po)await sb.from('item_status').insert({item_id:po.id,done:false,comment:makeComment('',[],'waiting')});
+    }
+  }
+}
+async function loadAll(){
+  const{data:raw,error}=await sb.from('schedule_items').select('*,programmes(id,name,emoji,badge_color)').order('scheduled_date');
+  if(error){setSyncText('Error!');return;}
+  const{data:st}=await sb.from('item_status').select('*');
+  statusMap={};(st||[]).forEach(s=>statusMap[s.item_id]=s);
+  items=raw||[];
+  setSyncText('Synced '+new Date().toLocaleTimeString('lo'));
+  updateStats();rebuildFilterButtons();
+  if(curTab==='cal')renderCal();else if(curTab==='list')renderList();else renderTeam();
+  if(isAdmin){renderProgTable();renderAdminTable();renderStaffTable();rebuildProgSelect();}
+}
+
+// ── STATS ──
+function updateStats(){
+  const shoots=items.filter(i=>i.type==='shoot');
+  const posts=items.filter(i=>i.type==='post');
+  // Shoot/edit avg %
+  const shootPctAvg=shoots.length?Math.round(shoots.reduce((acc,sh)=>acc+getShootPct(sh.id),0)/shoots.length):0;
+  // Post done %
+  const postDone=posts.filter(p=>getStage(p.id,'post')==='posted').length;
+  const postPct=posts.length?Math.round(postDone/posts.length*100):0;
+  document.getElementById('s-ep').textContent=shoots.length;
+  document.getElementById('s-clips').textContent=posts.length;
+  document.getElementById('s-shoot-pct').textContent=shootPctAvg+'%';
+  document.getElementById('s-shoot-bar').style.width=shootPctAvg+'%';
+  document.getElementById('s-post-pct').textContent=postPct+'%';
+  document.getElementById('s-post-bar').style.width=postPct+'%';
+}
+
+function rebuildFilterButtons(){
+  const row=document.getElementById('filter-row');
+  const ac=curFilter;
+  let html=`<button class="f-btn ${ac==='all'?'on':''}" onclick="setFilter('all',this)">ທັງໝົດ</button>
+  <button class="f-btn ${ac==='pending'?'on':''}" onclick="setFilter('pending',this)">⏳ ຄ້າງ</button>
+  <button class="f-btn ${ac==='ready'?'on':''}" onclick="setFilter('ready',this)">✅ ພ້ອມໂພສ</button>`;
+  const used=new Set(items.filter(i=>i.type==='shoot').map(i=>i.programme_id));
+  progList.filter(p=>used.has(p.id)).forEach(p=>{
+    const on=ac===p.id?'on':'';
+    html+=`<button class="f-btn ${on}" onclick="setFilter('${p.id}',this)" style="${on?`background:${hexToRgba(p.color,.15)};color:${p.color};border-color:${hexToRgba(p.color,.3)}`:''}">${p.displayName}</button>`;
+  });
+  row.innerHTML=html;
+}
+
+function getPostsForShoot(sh){
+  const t0=new Date(sh.scheduled_date).getTime();
+  return items.filter(i=>i.type==='post'&&i.programme_id===sh.programme_id&&new Date(i.scheduled_date).getTime()>=t0&&new Date(i.scheduled_date).getTime()<=t0+20*86400000)
+    .sort((a,b)=>a.scheduled_date.localeCompare(b.scheduled_date)||(parseNote(a.note).clip||1)-(parseNote(b.note).clip||1));
+}
+
+// ── CALENDAR ──
+function calNav(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}else if(calMonth<0){calMonth=11;calYear--;}renderCal();}
+
+function renderCal(){
+  // Update month label
+  document.getElementById('cal-month-label').textContent=`${MONTHS_LO[calMonth]} ${calYear}`;
+
+  // Build date lookup from all items
+  const byDate={};
+  items.forEach(it=>{
+    if(!byDate[it.scheduled_date])byDate[it.scheduled_date]=[];
+    byDate[it.scheduled_date].push(it);
+  });
+
+  // Use LOCAL date constructor to avoid UTC timezone shifts
+  const firstDay = new Date(calYear, calMonth, 1);      // local midnight day 1
+  const lastDay  = new Date(calYear, calMonth+1, 0);    // local midnight last day
+  const daysInMonth = lastDay.getDate();
+
+  // Mon-Sun grid: convert Sun=0…Sat=6 → Mon=0…Sun=6
+  const startEmpty = (firstDay.getDay() + 6) % 7;
+  const lastDow    = (lastDay.getDay() + 6) % 7;        // Mon=0 index of last day
+  const endEmpty   = lastDow === 6 ? 0 : 6 - lastDow;   // cells needed to complete final row
+
+  let html='';
+  for(let i=0;i<startEmpty;i++) html+='<div class="day empty"></div>';
+
+  for(let d=1;d<=daysInMonth;d++){
+    const mm=String(calMonth+1).padStart(2,'0');
+    const dd=String(d).padStart(2,'0');
+    const ds=`${calYear}-${mm}-${dd}`;
+    const dayItems=byDate[ds]||[];
+    const isToday=ds===TODAY;
+    html+=`<div class="day${isToday?' today':''}${dayItems.length===0?' empty':''}">`;
+    html+=isToday
+      ?`<div class="day-num"><span>${d}</span></div>`
+      :`<div class="day-num">${d}</div>`;
+
+    dayItems.forEach(it=>{
+      const prog=findProg(it.programme_id,it.programmes);
+      const bg=hexToRgba(prog.color,.12),bd=hexToRgba(prog.color,.3),tc=prog.color;
+      const avHtml=staffAvatarsHtml(it.id,'');
+      const done=!!statusMap[it.id]?.done;
+      let topLine,barHtml='';
+      if(it.type==='shoot'){
+        const pct=getShootPct(it.id);
+        const sc=getShootStageInfo(getStage(it.id,'shoot')).color;
+        topLine=`<input type="checkbox" ${done?'checked':''} style="accent-color:${tc}" onchange="event.stopPropagation();quickDone('${it.id}',this.checked,'shoot')">
+          <span class="cal-tag-text">🎬 ${prog.displayName}</span>
+          <span style="font-size:9px;font-weight:700;color:${sc};font-family:var(--mono);flex-shrink:0">${pct}%</span>`;
+        barHtml=`<div class="cal-mini-bar"><div class="cal-mini-fill" style="width:${pct}%;background:${sc}"></div></div>`;
+      } else {
+        const m=parseNote(it.note);
+        const pi=PLAT_INFO[m.platform];
+        const pc=PLAT_COLORS[m.platform];
+        const unlocked=isPostUnlocked(it);
+        const stageId=getStage(it.id,'post');
+        const statusIcon=unlocked?(stageId==='posted'?'✅':stageId==='scheduled'?'📅':''):'🔒';
+        const label=m.label||prog.displayName;
+        const platBadge=pc?`<span style="font-size:8px;font-weight:700;padding:1px 3px;border-radius:3px;background:${hexToRgba(pc,.25)};color:${pc};flex-shrink:0">${pi?pi.short:'?'}</span>`:'';
+        topLine=`<input type="checkbox" ${done?'checked':''} style="accent-color:${tc}" ${!unlocked?'disabled':''} onchange="event.stopPropagation();quickDone('${it.id}',this.checked,'post')">
+          <span style="font-size:10px;flex-shrink:0">${statusIcon}</span>
+          <span class="cal-tag-text">${label}</span>
+          ${platBadge}`;
+      }
+      html+=`<div class="cal-tag${done?' done':''}" style="background:${bg};border-color:${bd};color:${tc}" onclick="openDetail('${it.id}')">
+        <div class="cal-tag-top">${topLine}</div>
+        ${barHtml}
+        ${avHtml?`<div class="cal-tag-staff">${avHtml}</div>`:''}
+      </div>`;
+    });
+    html+='</div>';
+  }
+  for(let i=0;i<endEmpty;i++) html+='<div class="day empty"></div>';
+  document.getElementById('cal-body').innerHTML=html;
+}
+
+// ── LIST VIEW ──
+function renderList(){
+  const shoots=items.filter(i=>i.type==='shoot');
+  let filtered=shoots;
+  if(curFilter==='pending')filtered=shoots.filter(sh=>getShootPct(sh.id)<100);
+  else if(curFilter==='ready')filtered=shoots.filter(sh=>getStage(sh.id,'shoot')==='ready');
+  else if(curFilter!=='all')filtered=shoots.filter(sh=>sh.programme_id===curFilter);
+  if(!filtered.length){document.getElementById('list-body').innerHTML='<div class="empty-state">ບໍ່ມີລາຍການ</div>';return;}
+
+  let html='';
+  filtered.forEach(sh=>{
+    const prog=findProg(sh.programme_id,sh.programmes);
+    const shootDone=!!statusMap[sh.id]?.done;
+    const pct=getShootPct(sh.id);
+    const sc=getShootStageInfo(getStage(sh.id,'shoot'));
+    const posts=getPostsForShoot(sh);
+    const postDoneAll=posts.length===0||posts.every(p=>getStage(p.id,'post')==='posted');
+    const overallDone=pct===100&&postDoneAll;
+
+    const clipMap={};
+    posts.forEach(p=>{const m=parseNote(p.note);const key=`${m.clip||1}__${p.scheduled_date}`;if(!clipMap[key])clipMap[key]={clipNum:m.clip||1,date:p.scheduled_date,label:m.label||'',rows:[]};if(!clipMap[key].label&&m.label)clipMap[key].label=m.label;clipMap[key].rows.push({item:p,meta:m});});
+
+    html+=`<div class="ep-card">
+      <div class="ep-card-head">
+        <div class="ep-meta">
+          <span class="prog-tag" style="${progBadgeStyle(prog.color)}">${prog.displayName}</span>
+          <span style="font-size:12px;color:var(--text3)">ຖ່າຍ ${fmtDate(sh.scheduled_date)}</span>
+          ${shootChipHtml(sh.id)}
+        </div>
+        <span style="font-size:11px;padding:3px 10px;border-radius:20px;${overallDone?'background:var(--green-bg);color:var(--green)':'background:var(--red-bg);color:var(--red)'}">${overallDone?'✅ ສຳເລັດ':'⏳ ຄ້າງ'}</span>
+      </div>
+      <div class="ep-body">
+        <!-- SHOOT ROW -->
+        <div class="shoot-row" onclick="openDetail('${sh.id}')">
+          <div class="shoot-row-top">
+            <span class="shoot-label">🎬 Shoot</span>
+            <span class="shoot-title">${fmtDate(sh.scheduled_date)}</span>
+            <div class="staff-avatars">${staffAvatarsHtml(sh.id)}</div>
+            <input type="checkbox" ${shootDone?'checked':''} style="accent-color:var(--green);width:15px;height:15px;cursor:pointer" onclick="event.stopPropagation()" onchange="quickDone('${sh.id}',this.checked,'shoot')">
+          </div>
+          <div class="shoot-row-bar">
+            ${miniBarHtml(pct,sc.color)}
+            <div style="font-size:11px;color:var(--text2);margin-top:5px">${sc.label}</div>
+          </div>
+        </div>`;
+
+    if(Object.keys(clipMap).length>0){
+      html+=`<div class="clips-section"><div class="clips-title">📤 Post Clips</div>`;
+      Object.keys(clipMap).sort((a,b)=>{const[an,ad]=a.split('__'),[bn,bd]=b.split('__');return ad.localeCompare(bd)||parseInt(an)-parseInt(bn);}).forEach(key=>{
+        const cg=clipMap[key];
+        const heading=cg.label?`${prog.displayName} — ${cg.label}`:`${prog.displayName} — Clip ${cg.clipNum}`;
+        html+=`<div class="clip-group"><div class="clip-group-head"><span class="clip-label">${heading}</span><span class="clip-post-date">📅 ${fmtDate(cg.date)}</span></div><div class="clip-rows">`;
+        cg.rows.forEach(({item:p,meta:m})=>{
+          const pi=PLAT_INFO[m.platform]||{short:'?',cls:'plat-other'};
+          const pdone=!!statusMap[p.id]?.done;
+          const unlocked=isPostUnlocked(p);
+          const pAv=staffAvatarsHtml(p.id);
+          const timeStr=m.postTime?`<span class="task-time" style="color:var(--amber);font-size:11px;font-family:var(--mono)">⏰ ${m.postTime}</span>`:'';
+          html+=`<div class="clip-row${unlocked?'':' locked'}" onclick="${unlocked?`openDetail('${p.id}')`:''}">
+            <span class="clip-plat"><span class="plat-badge ${pi.cls}">${pi.short}</span></span>
+            <div style="flex:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
+              ${postChipHtml(p)}
+              ${timeStr}
+              <div class="staff-avatars">${pAv}</div>
+            </div>
+            <input type="checkbox" ${pdone?'checked':''} style="accent-color:var(--blue);width:15px;height:15px;cursor:${unlocked?'pointer':'not-allowed'}" ${unlocked?'':'disabled'} onclick="event.stopPropagation()" onchange="quickDone('${p.id}',this.checked,'post')">
+          </div>`;
+        });
+        html+=`</div></div>`;
+      });
+      html+=`</div>`;
+    }
+    html+=`</div></div>`;
+  });
+  document.getElementById('list-body').innerHTML=html;
+}
+
+// ── TEAM VIEW ──
+function renderTeam(){
+  if(!staffList.length){document.getElementById('staff-grid').innerHTML='<div class="no-staff">ຍັງບໍ່ມີພະນັກງານ — ເພີ່ມໄດ້ໃນ Admin Panel</div>';return;}
+  let html='';
+  staffList.forEach(st=>{
+    const myItems=items.filter(it=>getAssignedStaff(it.id).includes(st.id));
+    const shootItems=myItems.filter(i=>i.type==='shoot');
+    const postItems=myItems.filter(i=>i.type==='post');
+    const avgPct=shootItems.length?Math.round(shootItems.reduce((a,sh)=>a+getShootPct(sh.id),0)/shootItems.length):null;
+    html+=`<div class="staff-card" id="sc-${st.id}" onclick="toggleStaffCard('${st.id}')">
+      <div class="staff-card-head">
+        <div class="staff-big-av" style="background:${st.color}">${initials(st.name)}</div>
+        <div>
+          <div class="staff-card-name">${st.name}</div>
+          <div class="staff-card-count">${myItems.length} tasks${avgPct!==null?' · '+avgPct+'%':''}</div>
+        </div>
+      </div>
+      <div class="staff-card-body">`;
+    if(!myItems.length){html+=`<div style="font-size:12px;color:var(--text3);padding:8px 0">ຍັງບໍ່ມີວຽກ</div>`;}
+    else{
+      myItems.forEach(it=>{
+        const prog=findProg(it.programme_id,it.programmes);
+        const m=it.type==='post'?parseNote(it.note):{label:'',postTime:''};
+        const isShoot=it.type==='shoot';
+        const label=isShoot?`🎬 ${prog.displayName} — Shoot`:`📤 ${prog.displayName}${m.label?' — '+m.label:''} · ${PLAT_INFO[m.platform]?.short||'?'}`;
+        let statusHtml=isShoot?shootChipHtml(it.id):postChipHtml(it);
+        html+=`<div class="staff-task-item" onclick="event.stopPropagation();openDetail('${it.id}')">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>
+          ${statusHtml}
+        </div>`;
+      });
+    }
+    html+=`</div></div>`;
+  });
+  document.getElementById('staff-grid').innerHTML=html;
+}
+function toggleStaffCard(id){document.getElementById('sc-'+id).classList.toggle('expanded');}
+
+// ── DETAIL PANEL ──
+function openDetail(itemId){
+  detailItemId=itemId;
+  const it=items.find(i=>i.id===itemId);if(!it)return;
+  const prog=findProg(it.programme_id,it.programmes);
+  const isShoot=it.type==='shoot';
+  const m=isShoot?{label:'',postTime:''}:parseNote(it.note);
+  const meta=parseComment(statusMap[itemId]?.comment);
+  const done=!!statusMap[itemId]?.done;
+
+  // title
+  document.getElementById('dp-title').textContent=isShoot?`🎬 Shoot — ${prog.displayName}`:`📤 ${prog.displayName}${m.label?' — '+m.label:''}`;
+
+  // meta
+  let metaHtml=`<span class="prog-tag" style="${progBadgeStyle(prog.color)}">${prog.displayName}</span>`;
+  metaHtml+=`<span style="font-size:12px;color:var(--text3)">${fmtDate(it.scheduled_date)}</span>`;
+  if(!isShoot){const pi=PLAT_INFO[m.platform];if(pi)metaHtml+=`<span class="plat-badge ${pi.cls}">${pi.short}</span>`;if(m.postTime)metaHtml+=`<span style="font-size:11px;color:var(--amber);font-family:var(--mono)">⏰ ${m.postTime}</span>`;}
+  document.getElementById('dp-meta').innerHTML=metaHtml;
+
+  // progress bar (shoot only)
+  const pwrap=document.getElementById('dp-progress-wrap');
+  if(isShoot){
+    const pct=getShootPct(itemId);
+    const color=getShootStageInfo(getStage(itemId,'shoot')).color;
+    document.getElementById('dp-prog-fill').style.cssText=`width:${pct}%;background:${color}`;
+    document.getElementById('dp-prog-pct').textContent=pct+'%';
+    document.getElementById('dp-prog-pct').style.color=color;
+    pwrap.style.display='block';
+  } else {pwrap.style.display='none';}
+
+  // stages
+  document.getElementById('dp-stage-title').textContent=isShoot?'ຂັ້ນຕອນ ທີມຖ່າຍ/ຕັດ':'ສະຖານະ ທີມໂພສ';
+  if(isShoot){
+    const curStage=getStage(itemId,'shoot');
+    let stHtml='';
+    SHOOT_STAGES.forEach(s=>{
+      const active=curStage===s.id;
+      stHtml+=`<div class="stage-option ${active?'active':''}" style="${active?`background:${hexToRgba(s.color,.12)};border-color:${hexToRgba(s.color,.4)};color:${s.color}`:'color:var(--text2)'}" onclick="dpSetStage('${s.id}')">
+        <div class="stage-option-dot" style="background:${s.color}"></div>
+        <span class="stage-option-label">${s.label}</span>
+        <span class="stage-option-pct" style="color:${s.color}">${s.pct}%</span>
+        <span class="stage-option-check">✓</span>
+      </div>`;
+    });
+    document.getElementById('dp-stages').innerHTML=stHtml;
+  } else {
+    // POST
+    const unlocked=isPostUnlocked(it);
+    const curStage=getStage(itemId,'post');
+    let stHtml='';
+    if(!unlocked){
+      stHtml+=`<div class="lock-notice">🔒 <b>ລໍຖ້າທີມຕັດຕໍ່</b><br>ທີມໂພສຈະ unlock ເມື່ອ shoot ຮອດຂັ້ນຕອນ <b style="color:var(--green)">ພ້ອມໂພສ 100%</b></div>`;
+    }
+    POST_STAGES.forEach(s=>{
+      const active=curStage===s.id||(s.id==='waiting'&&!unlocked&&curStage==='waiting');
+      const disabled=!unlocked&&s.id!=='waiting';
+      stHtml+=`<div class="post-stage-btn ${active?'active':''} ${disabled?'disabled':''}" style="${active?`background:${hexToRgba(s.color,.12)};border-color:${hexToRgba(s.color,.4)}`:''}${disabled?';pointer-events:none':''}" onclick="${disabled?'':'dpSetStage(\''+s.id+'\')'}">
+        <span class="post-stage-icon">${s.icon}</span>
+        <div class="post-stage-info">
+          <div class="post-stage-label" style="${active?'color:'+s.color:''}">${s.label}</div>
+          <div class="post-stage-sub">${s.sub}</div>
+        </div>
+        <span class="post-stage-check" style="color:${s.color}">✓</span>
+      </div>`;
+    });
+    document.getElementById('dp-stages').innerHTML=stHtml;
+  }
+
+  // staff
+  const emEl=document.getElementById('dp-staff-empty');
+  if(!staffList.length){emEl.style.display='block';document.getElementById('dp-staff').innerHTML='';}
+  else{
+    emEl.style.display='none';
+    document.getElementById('dp-staff').innerHTML=staffList.map(st=>{
+      const assigned=meta.staff.includes(st.id);
+      return `<div class="staff-pick-chip ${assigned?'assigned':''}" style="${assigned?`background:${hexToRgba(st.color,.12)};border-color:${hexToRgba(st.color,.4)}`:''}" onclick="dpToggleStaff('${st.id}')">
+        <div class="sp-av" style="background:${st.color}">${initials(st.name)}</div>
+        <span class="sp-name">${st.name}</span>
+        <span class="sp-check" style="color:${st.color}">✓</span>
+      </div>`;
+    }).join('');
+  }
+
+  // comment
+  document.getElementById('dp-comment').value=meta.text||'';
+
+  // done btn
+  const dBtn=document.getElementById('dp-done-btn');
+  const isPostLocked=!isShoot&&!isPostUnlocked(it);
+  dBtn.className='done-btn'+(done?' is-done':'')+(isPostLocked?' disabled':'');
+  dBtn.disabled=isPostLocked;
+  dBtn.textContent=done?'✅ ສຳເລັດແລ້ວ':'☐ ໝາຍວ່າສຳເລັດ';
+
+  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('detail-panel').classList.add('open');
+}
+function closeDetail(){
+  document.getElementById('detail-overlay').classList.remove('open');
+  document.getElementById('detail-panel').classList.remove('open');
+  detailItemId=null;
+}
+
+async function dpSetStage(stageId){
+  if(!detailItemId)return;
+  const it=items.find(i=>i.id===detailItemId);
+  if(!it)return;
+  const meta=parseComment(statusMap[detailItemId]?.comment);
+  meta.stage=stageId;
+  // auto-done for shoot=ready or post=posted
+  let done=statusMap[detailItemId]?.done||false;
+  if(it.type==='shoot'&&stageId==='ready')done=true;
+  if(it.type==='post'&&stageId==='posted')done=true;
+  if(it.type==='shoot'&&stageId!=='ready')done=false;
+  if(it.type==='post'&&stageId!=='posted')done=false;
+  const comment=makeComment(meta.text,meta.staff,stageId);
+  await saveStatus(detailItemId,done,comment);
+  openDetail(detailItemId);
+  if(curTab==='cal')renderCal();else if(curTab==='list')renderList();else renderTeam();
+  updateStats();
+  toast('✅ ອັບເດດ stage','ok');
+}
+
+async function dpToggleStaff(staffId){
+  if(!detailItemId)return;
+  const meta=parseComment(statusMap[detailItemId]?.comment);
+  const idx=meta.staff.indexOf(staffId);
+  if(idx>=0)meta.staff.splice(idx,1);else meta.staff.push(staffId);
+  await saveStatus(detailItemId,statusMap[detailItemId]?.done||false,makeComment(meta.text,meta.staff,meta.stage));
+  openDetail(detailItemId);
+  if(curTab==='cal')renderCal();else if(curTab==='list')renderList();else renderTeam();
+}
+async function dpSave(){
+  if(!detailItemId)return;
+  const meta=parseComment(statusMap[detailItemId]?.comment);
+  meta.text=document.getElementById('dp-comment').value;
+  await saveStatus(detailItemId,statusMap[detailItemId]?.done||false,makeComment(meta.text,meta.staff,meta.stage));
+  toast('💾 ບັນທຶກ comment ແລ້ວ','ok');
+}
+async function dpToggleDone(){
+  if(!detailItemId)return;
+  const it=items.find(i=>i.id===detailItemId);
+  if(!it)return;
+  const cur=!!statusMap[detailItemId]?.done;
+  const meta=parseComment(statusMap[detailItemId]?.comment);
+  let newStage=meta.stage;
+  if(!cur){newStage=it.type==='shoot'?'ready':'posted';}
+  else{newStage=it.type==='shoot'?'todo':'waiting';}
+  await saveStatus(detailItemId,!cur,makeComment(meta.text,meta.staff,newStage));
+  openDetail(detailItemId);
+  if(curTab==='cal')renderCal();else if(curTab==='list')renderList();else renderTeam();
+  updateStats();
+}
+
+async function quickDone(itemId,done,type){
+  const meta=parseComment(statusMap[itemId]?.comment);
+  let stage=meta.stage;
+  if(done){stage=type==='shoot'?'ready':'posted';}
+  else{stage=type==='shoot'?'todo':'waiting';}
+  await saveStatus(itemId,done,makeComment(meta.text,meta.staff,stage));
+  updateStats();
+  if(curTab==='cal')renderCal();else if(curTab==='list')renderList();
+  toast(done?'✅ ສຳເລັດ!':'↩ ຍົກເລີກ',done?'ok':'');
+}
+
+async function saveStatus(itemId,done,comment){
+  if(statusMap[itemId]){await sb.from('item_status').update({done,comment,updated_at:new Date().toISOString()}).eq('item_id',itemId);}
+  else{await sb.from('item_status').insert({item_id:itemId,done,comment});}
+  if(!statusMap[itemId])statusMap[itemId]={};
+  statusMap[itemId].done=done;statusMap[itemId].comment=comment;
+}
+
+// ── ADMIN: PROGRAMME ──
+function renderProgTable(){
+  const shoots=items.filter(i=>i.type==='shoot');
+  let html='';
+  progList.forEach(p=>{
+    const cnt=shoots.filter(s=>s.programme_id===p.id).length;
+    html+=`<tr id="prow-${p.id}">
+      <td><span style="font-weight:600;color:${p.color}">${p.displayName}</span></td>
+      <td><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${p.color};vertical-align:middle"></span> ${p.color}</td>
+      <td style="font-family:var(--mono)">${cnt}</td>
+      <td style="display:flex;gap:6px">
+        <button class="edit-btn" onclick="editProgRow('${p.id}')">✏️</button>
+        ${cnt===0?`<button class="del-btn" onclick="deleteProgramme('${p.id}')">🗑</button>`:''}
+      </td>
+    </tr>`;
+  });
+  document.getElementById('prog-tbody').innerHTML=html||'<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:16px">ບໍ່ມີ</td></tr>';
+}
+function editProgRow(pid){
+  const p=progList.find(x=>x.id===pid);if(!p)return;
+  document.getElementById('prow-'+pid).innerHTML=`<td><input type="text" value="${p.displayName}" id="pe-n-${pid}" style="width:150px"></td>
+  <td><input type="color" value="${p.color}" id="pe-c-${pid}"></td>
+  <td colspan="2" style="display:flex;gap:6px"><button class="save-inline-btn" onclick="saveProg('${pid}')">💾</button><button class="del-btn" onclick="renderProgTable()">✕</button></td>`;
+}
+async function saveProg(pid){
+  const name=document.getElementById('pe-n-'+pid)?.value.trim();
+  const color=document.getElementById('pe-c-'+pid)?.value;
+  if(!name){toast('❌ ໃສ່ຊື່','err');return;}
+  await sb.from('programmes').update({emoji:name,badge_color:color}).eq('id',pid);
+  const p=progList.find(x=>x.id===pid);if(p){p.displayName=name;p.color=color;}
+  renderProgTable();rebuildProgSelect();rebuildFilterButtons();
+  if(curTab==='cal')renderCal();else if(curTab==='list')renderList();
+  toast('✅ ອັບເດດ','ok');
+}
+async function addProgramme(){
+  const rawName=document.getElementById('p-name').value.trim();
+  const color=document.getElementById('p-color').value;
+  if(!rawName){toast('❌ ໃສ່ຊື່','err');return;}
+  const slug=rawName.toLowerCase().replace(/[^a-z0-9]/g,'_').slice(0,30)+'_'+Date.now().toString(36);
+  const{data,error}=await sb.from('programmes').insert({name:slug,emoji:rawName,badge_color:color}).select().single();
+  if(error||!data){toast('❌ ບໍ່ສາມາດເພີ່ມ','err');return;}
+  progList.push({id:data.id,key:slug,displayName:rawName,color});
+  progMap[slug]=data.id;progMap[data.id]=data.id;
+  document.getElementById('p-name').value='';
+  renderProgTable();rebuildProgSelect();rebuildFilterButtons();
+  toast(`✅ ເພີ່ມ "${rawName}",'ok`);
+}
+async function deleteProgramme(pid){
+  if(!confirm('ລຶບ programme?'))return;
+  await sb.from('programmes').delete().eq('id',pid);
+  progList=progList.filter(p=>p.id!==pid);
+  renderProgTable();rebuildProgSelect();rebuildFilterButtons();
+  toast('🗑 ລຶບ programme','');
+}
+
+// ── ADMIN: STAFF (localStorage) ──
+function saveStaffLocal(){localStorage.setItem('maxy_staff',JSON.stringify(staffList));}
+function addStaff(){
+  const name=document.getElementById('st-name').value.trim();
+  const color=document.getElementById('st-color').value;
+  if(!name){toast('❌ ໃສ່ຊື່','err');return;}
+  staffList.push({id:'st_'+Date.now().toString(36),name,color});
+  saveStaffLocal();
+  document.getElementById('st-name').value='';
+  document.getElementById('st-color').value=STAFF_PALETTE[staffList.length%STAFF_PALETTE.length];
+  renderStaffTable();toast(`✅ ເພີ່ມ "${name}",'ok`);
+}
+function deleteStaff(id){
+  if(!confirm('ລຶບພະນັກງານ?'))return;
+  staffList=staffList.filter(s=>s.id!==id);saveStaffLocal();renderStaffTable();toast('🗑 ລຶບ','');
+}
+function renderStaffTable(){
+  let html='';
+  staffList.forEach(s=>{
+    html+=`<tr>
+      <td style="display:flex;align-items:center;gap:8px">
+        <div style="width:26px;height:26px;border-radius:50%;background:${s.color};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">${initials(s.name)}</div>
+        ${s.name}
+      </td>
+      <td><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${s.color};vertical-align:middle"></span> ${s.color}</td>
+      <td><button class="del-btn" onclick="deleteStaff('${s.id}')">🗑</button></td>
+    </tr>`;
+  });
+  document.getElementById('staff-tbody').innerHTML=html||'<tr><td colspan="3" style="text-align:center;color:var(--text3);padding:16px">ຍັງບໍ່ມີ</td></tr>';
+}
+
+// ── ADMIN: SCHEDULE TABLE ──
+function renderAdminTable(){
+  const shoots=items.filter(i=>i.type==='shoot');
+  let html='';
+  shoots.forEach(sh=>{
+    const prog=findProg(sh.programme_id,sh.programmes);
+    const posts=getPostsForShoot(sh);
+    const pct=getShootPct(sh.id);
+    const rows=posts.length||1;
+    if(!posts.length){
+      html+=`<tr><td><span class="prog-tag" style="${progBadgeStyle(prog.color)}">${prog.displayName}</span></td><td>${fmtDate(sh.scheduled_date)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>${pct}%</td><td>—</td><td><button class="del-btn" onclick="deleteShoot('${sh.id}')">🗑 EP</button></td></tr>`;
+    } else {
+      posts.forEach((p,idx)=>{
+        const m=parseNote(p.note);const pi=PLAT_INFO[m.platform]||{short:'—',cls:'plat-other'};
+        const pdone=!!statusMap[p.id]?.done;
+        html+=`<tr>
+          ${idx===0?`<td rowspan="${rows}"><span class="prog-tag" style="${progBadgeStyle(prog.color)}">${prog.displayName}</span></td><td rowspan="${rows}">${fmtDate(sh.scheduled_date)}</td>`:''}
+          <td>${fmtDate(p.scheduled_date)}</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--amber)">${m.postTime||'—'}</td>
+          <td style="font-family:var(--mono);font-size:11px">c${m.clip||1}</td>
+          <td><span class="plat-badge ${pi.cls}">${pi.short}</span></td>
+          <td style="font-size:12px">${m.label||'—'}</td>
+          ${idx===0?`<td rowspan="${rows}" style="font-family:var(--mono);font-weight:700;color:${getShootStageInfo(getStage(sh.id,'shoot')).color}">${pct}%</td>`:''}
+          <td><span style="color:${pdone?'var(--green)':'var(--red)'}">${pdone?'✅':'⏳'}</span></td>
+          <td style="display:flex;gap:4px;flex-wrap:wrap">
+            <button class="del-btn" onclick="deletePost('${p.id}')">🗑</button>
+            ${idx===0?`<button class="del-btn" onclick="deleteShoot('${sh.id}')">🗑EP</button>`:''}
+          </td>
+        </tr>`;
+      });
+    }
+  });
+  document.getElementById('admin-tbody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:20px">ບໍ່ມີ</td></tr>';
+}
+function rebuildProgSelect(){
+  const sel=document.getElementById('a-prog');if(!sel)return;
+  sel.innerHTML=progList.map(p=>`<option value="${p.id}">${p.displayName}</option>`).join('');
+}
+async function adminAddItem(){
+  const progId=document.getElementById('a-prog').value;
+  const shootDate=document.getElementById('a-shoot').value;
+  const postDate=document.getElementById('a-post').value;
+  const postTime=document.getElementById('a-time').value;
+  const clipNum=parseInt(document.getElementById('a-clip').value)||1;
+  const label=document.getElementById('a-label').value.trim();
+  const plats=[...(document.getElementById('a-fb').checked?['fb']:[]),...(document.getElementById('a-tt').checked?['tiktok']:[]),...(document.getElementById('a-yt').checked?['youtube']:[])];
+  if(!shootDate){toast('❌ ໃສ່ Shoot Date','err');return;}
+  if(!plats.length){toast('❌ ເລືອກ platform','err');return;}
+  const existing=items.find(i=>i.type==='shoot'&&i.programme_id===progId&&i.scheduled_date===shootDate);
+  if(!existing){
+    const{data:sh}=await sb.from('schedule_items').insert({programme_id:progId,type:'shoot',scheduled_date:shootDate}).select().single();
+    if(sh)await sb.from('item_status').insert({item_id:sh.id,done:false,comment:makeComment('',[],'todo')});
+  }
+  if(postDate){
+    for(const plat of plats){
+      const{data:po}=await sb.from('schedule_items').insert({programme_id:progId,type:'post',scheduled_date:postDate,note:makeNote(clipNum,plat,label,postTime)}).select().single();
+      if(po)await sb.from('item_status').insert({item_id:po.id,done:false,comment:makeComment('',[],'waiting')});
+    }
+  }
+  ['a-shoot','a-post','a-time','a-label'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('a-clip').value='1';
+  await loadAll();toast(`✅ ເພີ່ມ ${plats.length} platform(s)`,'ok');
+}
+async function deleteShoot(id){
+  if(!confirm('ລຶບ episode?'))return;
+  const sh=items.find(i=>i.id===id);
+  const posts=sh?getPostsForShoot(sh):[];
+  await sb.from('item_status').delete().eq('item_id',id);
+  await sb.from('schedule_items').delete().eq('id',id);
+  for(const p of posts){await sb.from('item_status').delete().eq('item_id',p.id);await sb.from('schedule_items').delete().eq('id',p.id);}
+  await loadAll();toast('🗑 ລຶບ episode','');
+}
+async function deletePost(id){
+  if(!confirm('ລຶບ clip?'))return;
+  await sb.from('item_status').delete().eq('item_id',id);
+  await sb.from('schedule_items').delete().eq('id',id);
+  await loadAll();toast('🗑 ລຶບ clip','');
+}
+
+// ── UI HELPERS ──
+function fmtDate(d){if(!d)return'—';return new Date(d+'T00:00:00').toLocaleDateString('lo-LA',{day:'numeric',month:'short',year:'numeric'});}
+function toggleSection(head){head.classList.toggle('open');head.nextElementSibling.classList.toggle('open');}
+function switchTab(tab,btn){
+  curTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));btn.classList.add('on');
+  ['cal-view','list-view','team-view'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById(tab+'-view').style.display='block';
+  if(tab==='cal')renderCal();else if(tab==='list')renderList();else renderTeam();
+}
+function setFilter(f,btn){
+  curFilter=f;
+  document.querySelectorAll('.f-btn').forEach(b=>{b.classList.remove('on');b.style.cssText='';});
+  btn.classList.add('on');
+  if(!['all','pending','ready'].includes(f)){const p=progList.find(x=>x.id===f);if(p){btn.style.background=hexToRgba(p.color,.15);btn.style.color=p.color;btn.style.borderColor=hexToRgba(p.color,.3);}}
+  renderList();
+}
+function toggleAdminMode(){
+  if(isAdmin){isAdmin=false;document.getElementById('admin-panel').style.display='none';document.getElementById('admin-toggle-btn').classList.remove('active');document.getElementById('admin-toggle-btn').textContent='🔐 Admin';return;}
+  document.getElementById('login-overlay').style.display='flex';setTimeout(()=>document.getElementById('pw-input').focus(),100);
+}
+function checkPw(){
+  if(document.getElementById('pw-input').value===ADMIN_PASSWORD){
+    isAdmin=true;document.getElementById('login-overlay').style.display='none';document.getElementById('admin-panel').style.display='block';
+    document.getElementById('admin-toggle-btn').classList.add('active');document.getElementById('admin-toggle-btn').textContent='🔓 Admin ON';
+    document.getElementById('pw-input').value='';
+    renderProgTable();renderAdminTable();renderStaffTable();rebuildProgSelect();
+    toast('🔓 Admin mode ເປີດ','ok');
+  }else{document.getElementById('login-err').style.display='block';document.getElementById('pw-input').value='';}
+}
+function closeLogin(){document.getElementById('login-overlay').style.display='none';document.getElementById('pw-input').value='';document.getElementById('login-err').style.display='none';}
+function setSyncText(t){document.getElementById('sync-text').textContent=t;}
+let toastTimer;
+function toast(msg,type){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+(type||'');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);}
+
+// ══════════════════════════════════════════════
+// EXPORT SYSTEM
+// ══════════════════════════════════════════════
+function openExport(){document.getElementById('export-overlay').classList.add('open');}
+function closeExport(){document.getElementById('export-overlay').classList.remove('open');document.getElementById('export-progress').style.display='none';}
+
+// ── Build flat rows of all data ──
+function buildExportRows(){
+  const rows=[];
+  const shoots=items.filter(i=>i.type==='shoot').sort((a,b)=>a.scheduled_date.localeCompare(b.scheduled_date));
+  shoots.forEach(sh=>{
+    const prog=findProg(sh.programme_id,sh.programmes);
+    const shootStage=getStage(sh.id,'shoot');
+    const shootStageInfo=getShootStageInfo(shootStage);
+    const shootPct=shootStageInfo.pct;
+    const shootDone=!!statusMap[sh.id]?.done;
+    const shootMeta=parseComment(statusMap[sh.id]?.comment);
+    const shootStaff=shootMeta.staff.map(sid=>staffList.find(s=>s.id===sid)?.name||'—').join(', ')||'—';
+    const posts=getPostsForShoot(sh);
+    if(!posts.length){
+      rows.push({
+        ລາຍການ:prog.displayName, ວັນຖ່າຍ:sh.scheduled_date,
+        'Clip #':'—', 'Clip Label':'—', Platform:'—',
+        ວັນໂພສ:'—', ເວລາໂພສ:'—',
+        'ຂັ້ນຕອນ ຖ່າຍ/ຕັດ':shootStageInfo.label, '% ຖ່າຍ/ຕັດ':shootPct+'%',
+        ສະຖານະໂພສ:'—', 'ຖ່າຍ Done':shootDone?'✓':'', 'ໂພສ Done':'—',
+        ພະນັກງານຖ່າຍ:shootStaff, ພະນັກງານໂພສ:'—',
+        ໝາຍເຫດຖ່າຍ:shootMeta.text||'', ໝາຍເຫດໂພສ:'',
+      });
+    } else {
+      posts.forEach(p=>{
+        const m=parseNote(p.note);
+        const pi=PLAT_INFO[m.platform]||{label:m.platform||'—'};
+        const postStage=getStage(p.id,'post');
+        const postStageInfo=getPostStageInfo(postStage);
+        const postDone=!!statusMap[p.id]?.done;
+        const postMeta=parseComment(statusMap[p.id]?.comment);
+        const postStaff=postMeta.staff.map(sid=>staffList.find(s=>s.id===sid)?.name||'—').join(', ')||'—';
+        const unlocked=isPostUnlocked(p);
+        rows.push({
+          ລາຍການ:prog.displayName, ວັນຖ່າຍ:sh.scheduled_date,
+          'Clip #':m.clip||1, 'Clip Label':m.label||'—', Platform:pi.label,
+          ວັນໂພສ:p.scheduled_date, ເວລາໂພສ:m.postTime||'—',
+          'ຂັ້ນຕອນ ຖ່າຍ/ຕັດ':shootStageInfo.label, '% ຖ່າຍ/ຕັດ':shootPct+'%',
+          ສະຖານະໂພສ:!unlocked?'🔒 ລໍຖ້າ':postStageInfo.label,
+          'ຖ່າຍ Done':shootDone?'✓':'', 'ໂພສ Done':postDone?'✓':'',
+          ພະນັກງານຖ່າຍ:shootStaff, ພະນັກງານໂພສ:postStaff,
+          ໝາຍເຫດຖ່າຍ:shootMeta.text||'', ໝາຍເຫດໂພສ:postMeta.text||'',
+        });
+      });
+    }
+  });
+  return rows;
+}
+
+// ── Summary rows (by programme) ──
+function buildSummaryRows(){
+  const rows=[];
+  progList.forEach(p=>{
+    const shoots=items.filter(i=>i.type==='shoot'&&i.programme_id===p.id);
+    if(!shoots.length)return;
+    const posts=shoots.flatMap(sh=>getPostsForShoot(sh));
+    const avgPct=shoots.length?Math.round(shoots.reduce((a,sh)=>a+getShootPct(sh.id),0)/shoots.length):0;
+    const postedCount=posts.filter(po=>getStage(po.id,'post')==='posted').length;
+    const postPct=posts.length?Math.round(postedCount/posts.length*100):0;
+    rows.push({
+      ລາຍການ:p.displayName,
+      'Episodes':shoots.length,
+      'Clips ທັງໝົດ':posts.length,
+      '% ຖ່າຍ/ຕັດ (avg)':avgPct+'%',
+      '% ໂພສ':postPct+'%',
+      'ໂພສສຳເລັດ':postedCount+'/'+posts.length,
+    });
+  });
+  return rows;
+}
+
+// ── Staff rows ──
+function buildStaffRows(){
+  const rows=[];
+  staffList.forEach(st=>{
+    const myItems=items.filter(it=>getAssignedStaff(it.id).includes(st.id));
+    const shootItems=myItems.filter(i=>i.type==='shoot');
+    const postItems=myItems.filter(i=>i.type==='post');
+    const avgPct=shootItems.length?Math.round(shootItems.reduce((a,sh)=>a+getShootPct(sh.id),0)/shootItems.length):0;
+    const posted=postItems.filter(p=>getStage(p.id,'post')==='posted').length;
+    rows.push({
+      ຊື່:st.name,
+      'Tasks ທັງໝົດ':myItems.length,
+      'Shoot tasks':shootItems.length,
+      'Post tasks':postItems.length,
+      '% ຖ່າຍ/ຕັດ (avg)':shootItems.length?avgPct+'%':'—',
+      'ໂພສສຳເລັດ':postItems.length?posted+'/'+postItems.length:'—',
+    });
+  });
+  if(!rows.length)rows.push({ຊື່:'ຍັງບໍ່ມີພະນັກງານ','Tasks ທັງໝົດ':'','Shoot tasks':'','Post tasks':'','% ຖ່າຍ/ຕັດ (avg)':'','ໂພສສຳເລັດ':''});
+  return rows;
+}
+
+// ── Platform rows ──
+function buildPlatformRows(){
+  const platMap={fb:{name:'Facebook',total:0,posted:0,scheduled:0,waiting:0},tiktok:{name:'TikTok',total:0,posted:0,scheduled:0,waiting:0},youtube:{name:'YouTube',total:0,posted:0,scheduled:0,waiting:0}};
+  items.filter(i=>i.type==='post').forEach(p=>{
+    const m=parseNote(p.note);const plat=m.platform||'other';
+    if(!platMap[plat])platMap[plat]={name:plat,total:0,posted:0,scheduled:0,waiting:0};
+    platMap[plat].total++;
+    const stage=getStage(p.id,'post');
+    if(stage==='posted')platMap[plat].posted++;
+    else if(stage==='scheduled')platMap[plat].scheduled++;
+    else platMap[plat].waiting++;
+  });
+  return Object.values(platMap).filter(r=>r.total>0).map(r=>({
+    Platform:r.name, 'Clips ທັງໝົດ':r.total,
+    'ໂພສແລ້ວ':r.posted, 'Schedule':r.scheduled, 'ລໍຖ້າ':r.waiting,
+    '% ໂພສ':r.total?Math.round(r.posted/r.total*100)+'%':'0%',
+  }));
+}
+
+// ── EXCEL EXPORT ──
+// ══════════════════════════════════════════════
+// EXCEL EXPORT  (ExcelJS — full styling)
+// ══════════════════════════════════════════════
+// ── Color lighten helper ──
+function lightenHex(hex, t=0.88){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  const m=c=>Math.round(c+(255-c)*t).toString(16).padStart(2,'0').toUpperCase();
+  return 'FF'+m(r)+m(g)+m(b);
+}
+function hexArgb(hex){return 'FF'+hex.replace('#','').toUpperCase().padStart(6,'0');}
+
+async function exportExcel(){
+  const pg=document.getElementById('export-progress');
+  pg.style.display='block'; pg.textContent='⏳ ກຳລັງສ້າງ Excel...';
+  await new Promise(r=>setTimeout(r,80));
+  try{
+    if(typeof ExcelJS==='undefined') throw new Error('ExcelJS ຍັງໂຫຼດບໍ່ສຳເລັດ — ລໍຖ້າ 5 ວິ ແລ້ວລອງໃໝ່');
+    const wb=new ExcelJS.Workbook();
+    wb.creator='MAXY Schedule'; wb.created=new Date();
+
+    const FNT='Noto Sans Lao';
+    const now=new Date();
+    const dateStr=now.toLocaleDateString('lo-LA',{day:'numeric',month:'long',year:'numeric'});
+    const allShoots=items.filter(i=>i.type==='shoot').sort((a,b)=>a.scheduled_date.localeCompare(b.scheduled_date));
+    const allPosts=items.filter(i=>i.type==='post');
+    const avgShootPct=allShoots.length?Math.round(allShoots.reduce((a,s)=>a+getShootPct(s.id),0)/allShoots.length):0;
+    const postedCount=allPosts.filter(p=>getStage(p.id,'post')==='posted').length;
+    const postPct=allPosts.length?Math.round(postedCount/allPosts.length*100):0;
+
+    // ── Colour palette (ARGB) ──
+    const C={
+      purple:'FF5B50D6', purpleL:'FFE8E5FF', purpleD:'FF2D2580',
+      green:'FF16A34A',  greenL:'FFF0FDF4',  greenD:'FF14532D',
+      blue:'FF2563EB',   blueL:'FFEFF6FF',   blueD:'FF1E3A8A',
+      amber:'FFD97706',  amberL:'FFFFFBEB',
+      gray:'FF6B7280',   grayL:'FFF9FAFB',   grayXL:'FFF3F4F6',
+      fb:'FF1877F2',     fbL:'FFE8F0FE',
+      tt:'FFEE1D52',     ttL:'FFFDE8EC',
+      yt:'FFFF0000',     ytL:'FFFDE8E8',
+      white:'FFFFFFFF',  hd:'FF1E1B4B',
+      bdr:'FFD0D3E8',    rowAlt:'FFF8F7FF',
+      txt:'FF111827',    txt2:'FF4B5563',  txt3:'FF9CA3AF',
+    };
+    const SS={
+      todo:    {bg:C.grayL,  fg:C.gray},
+      shooting:{bg:C.amberL, fg:C.amber},
+      editing: {bg:C.blueL,  fg:C.blue},
+      review:  {bg:'FFF5F3FF',fg:'FF7C3AED'},
+      ready:   {bg:C.greenL, fg:C.green},
+    };
+    const PS={waiting:{fg:C.gray},scheduled:{fg:C.amber},posted:{fg:C.green}};
+    const PLATFG={fb:C.fb,tiktok:C.tt,youtube:C.yt};
+    const PLATLABEL={fb:'Facebook',tiktok:'TikTok',youtube:'YouTube'};
+    const PLATBG={fb:C.fbL,tiktok:C.ttL,youtube:C.ytL};
+
+    // ── Core helpers ──
+    const fill=a=>({type:'pattern',pattern:'solid',fgColor:{argb:a}});
+    const fnt=(o={})=>({name:FNT,size:11,...o});
+    const bdr=(a=C.bdr)=>{const s={style:'thin',color:{argb:a}};return{top:s,bottom:s,left:s,right:s};};
+    const aln=(h='left',v='middle',w=false)=>({horizontal:h,vertical:v,wrapText:w});
+
+    // Style all cells in a row uniformly
+    function sRow(row,bg,fg=C.txt,bold=false,sz=11,h=22,ha='left'){
+      row.height=h;
+      row.eachCell({includeEmpty:true},(cell,col)=>{
+        if(col>row.cellCount+2)return;
+        cell.fill=fill(bg);
+        cell.font=fnt({color:{argb:fg},bold,size:sz});
+        cell.alignment=aln(ha);
+        cell.border=bdr();
+      });
+    }
+
+    // Title row (row 1, merged)
+    function banner(ws,text,cols,bg=C.purple,fg=C.white,sz=14){
+      ws.mergeCells(1,1,1,cols);
+      const c=ws.getCell('A1');
+      c.value=text; c.fill=fill(bg);
+      c.font=fnt({bold:true,color:{argb:fg},size:sz});
+      c.alignment=aln('left','middle');
+      c.border=bdr(bg);
+      ws.getRow(1).height=42;
+    }
+    // Subtitle row (row 2, merged)
+    function sub(ws,text,cols,bg=C.purpleL,fg=C.txt2){
+      ws.mergeCells(2,1,2,cols);
+      const c=ws.getCell('A2');
+      c.value=text; c.fill=fill(bg);
+      c.font=fnt({size:10,color:{argb:fg}});
+      c.alignment=aln('left','middle');
+      c.border=bdr(C.bdr);
+      ws.getRow(2).height=22;
+    }
+    // Section label row
+    function secLabel(ws,rn,text,cols,bg=C.grayXL,fg=C.hd){
+      ws.mergeCells(rn,1,rn,cols);
+      const c=ws.getCell(rn,1);
+      c.value=text; c.fill=fill(bg);
+      c.font=fnt({bold:true,size:11,color:{argb:fg}});
+      c.alignment=aln('left','middle'); c.border=bdr();
+      ws.getRow(rn).height=26;
+    }
+    // Column header row (already added via addRow, just style it)
+    function hdrRow(row,bg=C.hd,fg=C.white){
+      row.height=30;
+      row.eachCell({includeEmpty:true},(cell,col)=>{
+        if(col>row.cellCount)return;
+        cell.fill=fill(bg);
+        cell.font=fnt({bold:true,color:{argb:fg},size:10});
+        cell.alignment=aln('center');
+        cell.border=bdr();
+      });
+    }
+    // Blank spacer row
+    function spacer(ws,rn,cols){
+      ws.mergeCells(rn,1,rn,cols);
+      ws.getCell(rn,1).fill=fill(C.white);
+      ws.getRow(rn).height=6;
+    }
+
+    // ════════════════════════════════════════════
+    // SHEET 1: ສະຫຼຸບ  (7 cols)
+    // ════════════════════════════════════════════
+    const s1=wb.addWorksheet('ສະຫຼຸບ',{views:[{showGridLines:false}]});
+    s1.columns=[{width:26},{width:13},{width:13},{width:20},{width:20},{width:17},{width:15}];
+
+    banner(s1,'MAXY Schedule Report',7,C.purple,C.white,14);
+    sub(s1,`ສ້າງວັນທີ: ${dateStr}   ·   ${allShoots.length} Episodes  ·  ${allPosts.length} Clips`,7);
+    spacer(s1,3,7);
+
+    // Stat block rows 4-5
+    const statDef=[
+      {lbl:'Episodes',       val:allShoots.length, bg:C.purpleL, fg:C.purple, c1:1,c2:2},
+      {lbl:'Clips ທັງໝົດ',  val:allPosts.length,  bg:C.blueL,   fg:C.blue,   c1:3,c2:4},
+      {lbl:'% ຖ່າຍ/ຕັດ',   val:avgShootPct+'%',  bg:C.blueL,   fg:C.blue,   c1:5,c2:5},
+      {lbl:'% ໂພສ',         val:postPct+'%',      bg:C.greenL,  fg:C.green,  c1:6,c2:7},
+    ];
+    statDef.forEach(d=>{
+      s1.mergeCells(4,d.c1,4,d.c2);
+      const lc=s1.getCell(4,d.c1);
+      lc.value=d.lbl; lc.fill=fill(d.bg);
+      lc.font=fnt({bold:true,size:10,color:{argb:d.fg}});
+      lc.alignment=aln('center'); lc.border=bdr(); s1.getRow(4).height=22;
+
+      s1.mergeCells(5,d.c1,5,d.c2);
+      const vc=s1.getCell(5,d.c1);
+      vc.value=d.val; vc.fill=fill(d.bg);
+      vc.font=fnt({bold:true,size:22,color:{argb:d.fg}});
+      vc.alignment=aln('center'); vc.border=bdr(); s1.getRow(5).height=44;
+    });
+
+    spacer(s1,6,7);
+    secLabel(s1,7,'  ສະຫຼຸບ ຕາມລາຍການ',7);
+    const r1h=s1.addRow(['ລາຍການ','Episodes','Clips','% ຖ່າຍ/ຕັດ','% ໂພສ','ໂພສສຳເລັດ','ສະຖານະ']);
+    hdrRow(r1h);
+    s1.views=[{state:'frozen',ySplit:8,showGridLines:false}];
+
+    progList.filter(p=>allShoots.some(s=>s.programme_id===p.id)).forEach((p,i)=>{
+      const pShoots=allShoots.filter(s=>s.programme_id===p.id);
+      const pPosts=pShoots.flatMap(s=>getPostsForShoot(s));
+      const pAvg=pShoots.length?Math.round(pShoots.reduce((a,s)=>a+getShootPct(s.id),0)/pShoots.length):0;
+      const pPosted=pPosts.filter(po=>getStage(po.id,'post')==='posted').length;
+      const pPct=pPosts.length?Math.round(pPosted/pPosts.length*100):0;
+      const status=pAvg===100&&pPct===100?'✅ ສຳເລັດ':pAvg===0?'—':'🔄 ດຳເນີນ';
+      const bg=i%2===0?C.white:C.rowAlt;
+      const row=s1.addRow([p.displayName,pShoots.length,pPosts.length,pAvg+'%',pPct+'%',`${pPosted} / ${pPosts.length}`,status]);
+      sRow(row,bg,C.txt,false,11,24);
+      // Prog name: light prog bg, prog color text
+      const nc=row.getCell(1);
+      nc.fill=fill(lightenHex(p.color));
+      nc.font=fnt({bold:true,size:11,color:{argb:hexArgb(p.color)}});
+      // % colours
+      const sFg=pAvg===100?C.green:pAvg>50?C.blue:C.amber;
+      row.getCell(4).font=fnt({bold:true,size:11,color:{argb:sFg}});
+      const pFg=pPct===100?C.green:pPct>50?C.blue:C.amber;
+      row.getCell(5).font=fnt({bold:true,size:11,color:{argb:pFg}});
+      [2,3,4,5,6].forEach(c=>{row.getCell(c).alignment=aln('center');});
+      const stFg=pAvg===100&&pPct===100?C.green:C.amber;
+      row.getCell(7).font=fnt({size:11,color:{argb:stFg}});
+      row.getCell(7).alignment=aln('center');
+    });
+
+    // ════════════════════════════════════════════
+    // SHEET 2: ລາຍລະອຽດ  (14 cols) — iterate items directly
+    // ════════════════════════════════════════════
+    const s2=wb.addWorksheet('ລາຍລະອຽດ',{views:[{showGridLines:false}]});
+    s2.columns=[
+      {width:18},{width:12},{width:8},{width:22},{width:12},
+      {width:12},{width:9},{width:20},{width:10},
+      {width:18},{width:10},{width:10},
+      {width:22},{width:22},{width:26},{width:26}
+    ];
+
+    banner(s2,'ລາຍລະອຽດທຸກ Episode & Clip',16,C.purple,C.white,13);
+    sub(s2,`${dateStr}  ·  ທຸກ row = 1 clip-platform`,16);
+    const r2h=s2.addRow(['ລາຍການ','ວັນຖ່າຍ','Clip #','Clip Label','Platform','ວັນໂພສ','ເວລາ','ຂັ້ນຕອນ ຖ່າຍ/ຕັດ','%','ສະຖານະ ໂພສ','ຖ່າຍ ✓','ໂພສ ✓','ພນງ ຖ່າຍ','ພນງ ໂພສ','ໝາຍເຫດ ຖ່າຍ','ໝາຍເຫດ ໂພສ']);
+    hdrRow(r2h);
+    s2.views=[{state:'frozen',ySplit:3,showGridLines:false}];
+
+    let rIdx=0;
+    allShoots.forEach(sh=>{
+      const prog=findProg(sh.programme_id,sh.programmes);
+      const sStageId=getStage(sh.id,'shoot');
+      const sStage=SS[sStageId]||{bg:C.white,fg:C.gray};
+      const sPct=getShootPct(sh.id);
+      const sInfo=getShootStageInfo(sStageId);
+      const sMeta=parseComment(statusMap[sh.id]?.comment);
+      const sStaff=sMeta.staff.map(id=>staffList.find(s=>s.id===id)?.name).filter(Boolean).join(', ')||'—';
+      const sDone=!!statusMap[sh.id]?.done;
+      getPostsForShoot(sh).forEach(p=>{
+        const m=parseNote(p.note);
+        const pStageId=getStage(p.id,'post');
+        const pInfo=getPostStageInfo(pStageId);
+        const pMeta=parseComment(statusMap[p.id]?.comment);
+        const pStaff=pMeta.staff.map(id=>staffList.find(s=>s.id===id)?.name).filter(Boolean).join(', ')||'—';
+        const pDone=!!statusMap[p.id]?.done;
+        const unlocked=isPostUnlocked(p);
+        const pStatusLbl=!unlocked?'🔒 ລໍຖ້າ':pInfo.label;
+        const bg=rIdx%2===0?sStage.bg:C.white;
+        const row=s2.addRow([
+          prog.displayName, sh.scheduled_date,
+          m.clip||1, m.label||'—',
+          PLATLABEL[m.platform]||m.platform||'—',
+          p.scheduled_date, m.postTime||'—',
+          sInfo.label, sPct+'%',
+          pStatusLbl,
+          sDone?'✓':'—', pDone?'✓':'—',
+          sStaff, pStaff,
+          sMeta.text||'—', pMeta.text||'—',
+        ]);
+        sRow(row,bg,C.txt,false,10,22);
+        // Prog name: light bg + prog colour text
+        row.getCell(1).fill=fill(lightenHex(prog.color));
+        row.getCell(1).font=fnt({bold:true,size:10,color:{argb:hexArgb(prog.color)}});
+        // Stage colour
+        row.getCell(8).font=fnt({bold:true,size:10,color:{argb:sStage.fg}});
+        row.getCell(9).font=fnt({bold:true,size:10,color:{argb:sStage.fg}});
+        // Platform colour
+        const platFg=PLATFG[m.platform]||C.gray;
+        row.getCell(5).font=fnt({bold:true,size:10,color:{argb:platFg}});
+        // Post status colour
+        const pSFg=!unlocked?C.gray:(PS[pStageId]?.fg||C.gray);
+        row.getCell(10).font=fnt({bold:true,size:10,color:{argb:pSFg}});
+        // Done tick colours
+        row.getCell(11).font=fnt({bold:true,size:12,color:{argb:sDone?C.green:C.gray}});
+        row.getCell(12).font=fnt({bold:true,size:12,color:{argb:pDone?C.green:C.gray}});
+        // Centre alignments
+        [2,3,6,7,9,11,12].forEach(c=>row.getCell(c).alignment=aln('center'));
+        rIdx++;
+      });
+    });
+
+    // ════════════════════════════════════════════
+    // SHEET 3: ພະນັກງານ  (6 cols)
+    // ════════════════════════════════════════════
+    const s3=wb.addWorksheet('ພະນັກງານ',{views:[{showGridLines:false}]});
+    s3.columns=[{width:22},{width:14},{width:14},{width:14},{width:22},{width:18}];
+    banner(s3,'ພະນັກງານ & Workload',6,C.blue,C.white,13);
+    sub(s3,`${staffList.length} ຄົນ  ·  ${dateStr}`,6,C.blueL,C.blueD);
+    const r3h=s3.addRow(['ຊື່ພະນັກງານ','Tasks ທັງໝົດ','Shoot Tasks','Post Tasks','% ຖ່າຍ/ຕັດ','ໂພສສຳເລັດ']);
+    hdrRow(r3h,C.blueD);
+    s3.views=[{state:'frozen',ySplit:3,showGridLines:false}];
+
+    if(!staffList.length){
+      s3.mergeCells(4,1,4,6);
+      const ec=s3.getCell('A4');
+      ec.value='ຍັງບໍ່ທັນເພີ່ມພະນັກງານ';
+      ec.fill=fill(C.grayL); ec.font=fnt({italic:true,color:{argb:C.gray}});
+      ec.alignment=aln('center'); ec.border=bdr(); s3.getRow(4).height=32;
+    } else {
+      staffList.forEach((st,i)=>{
+        const myItems=items.filter(it=>getAssignedStaff(it.id).includes(st.id));
+        const shs=myItems.filter(it=>it.type==='shoot');
+        const pos=myItems.filter(it=>it.type==='post');
+        const avg=shs.length?Math.round(shs.reduce((a,s)=>a+getShootPct(s.id),0)/shs.length):0;
+        const posted=pos.filter(p=>getStage(p.id,'post')==='posted').length;
+        const bg=i%2===0?C.white:C.blueL;
+        const row=s3.addRow([st.name,myItems.length,shs.length,pos.length,shs.length?avg+'%':'—',pos.length?`${posted} / ${pos.length}`:'—']);
+        sRow(row,bg,C.txt,false,11,26);
+        row.getCell(1).fill=fill(lightenHex(st.color));
+        row.getCell(1).font=fnt({bold:true,size:12,color:{argb:hexArgb(st.color)}});
+        [2,3,4,5,6].forEach(c=>row.getCell(c).alignment=aln('center'));
+        if(shs.length){const fg=avg===100?C.green:avg>50?C.blue:C.amber;row.getCell(5).font=fnt({bold:true,size:11,color:{argb:fg}});}
+        if(pos.length){const pPct=Math.round(posted/pos.length*100);const fg=pPct===100?C.green:pPct>50?C.blue:C.amber;row.getCell(6).font=fnt({bold:true,size:11,color:{argb:fg}});}
+      });
+    }
+
+    // ════════════════════════════════════════════
+    // SHEET 4: Platform  (6 cols)
+    // ════════════════════════════════════════════
+    const s4=wb.addWorksheet('Platform',{views:[{showGridLines:false}]});
+    s4.columns=[{width:18},{width:16},{width:14},{width:14},{width:14},{width:14}];
+    banner(s4,'Platform Breakdown',6,C.green,C.white,13);
+    sub(s4,`${dateStr}`,6,C.greenL,C.greenD);
+    const r4h=s4.addRow(['Platform','Clips ທັງໝົດ','ໂພສແລ້ວ ✓','Schedule','ລໍຖ້າ','% ໂພສ']);
+    hdrRow(r4h,C.greenD);
+    s4.views=[{state:'frozen',ySplit:3,showGridLines:false}];
+
+    ['fb','tiktok','youtube'].forEach(platId=>{
+      const platPosts=allPosts.filter(p=>parseNote(p.note).platform===platId);
+      if(!platPosts.length)return;
+      const posted=platPosts.filter(p=>getStage(p.id,'post')==='posted').length;
+      const scheduled=platPosts.filter(p=>getStage(p.id,'post')==='scheduled').length;
+      const waiting=platPosts.filter(p=>getStage(p.id,'post')==='waiting').length;
+      const pct=Math.round(posted/platPosts.length*100);
+      const row=s4.addRow([PLATLABEL[platId],platPosts.length,posted,scheduled,waiting,pct+'%']);
+      sRow(row,PLATBG[platId],C.txt,false,12,30);
+      row.getCell(1).font=fnt({bold:true,size:13,color:{argb:PLATFG[platId]}});
+      row.getCell(3).font=fnt({bold:true,size:12,color:{argb:C.green}});
+      row.getCell(4).font=fnt({size:12,color:{argb:C.amber}});
+      row.getCell(5).font=fnt({size:12,color:{argb:C.gray}});
+      const pFg=pct===100?C.green:pct>50?C.blue:C.amber;
+      row.getCell(6).font=fnt({bold:true,size:12,color:{argb:pFg}});
+      [2,3,4,5,6].forEach(c=>row.getCell(c).alignment=aln('center'));
+    });
+
+    // ── Download ──
+    pg.textContent='⏳ ກຳລັງດາວໂຫຼດ...';
+    const buffer=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const fname=`MAXY_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`;
+    Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:fname}).click();
+    pg.textContent='✅ ດາວໂຫຼດ Excel ສຳເລັດ!';
+    toast('✅ Export Excel ສຳເລັດ','ok');
+    setTimeout(()=>{pg.style.display='none';},2500);
+  } catch(e){
+    console.error('Excel error:',e);
+    document.getElementById('export-progress').textContent='❌ Error: '+e.message;
+    toast('❌ Export ລົ້ມເຫຼວ','err');
+  }
+}
+
+// ══════════════════════════════════════════════
+// CSV EXPORT — structured multi-section
+// ══════════════════════════════════════════════
+function exportCSV(){
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('lo-LA',{day:'numeric',month:'long',year:'numeric'});
+  const allShoots=items.filter(i=>i.type==='shoot');
+  const allPosts=items.filter(i=>i.type==='post');
+  const avgPct=allShoots.length?Math.round(allShoots.reduce((a,s)=>a+getShootPct(s.id),0)/allShoots.length):0;
+  const posted=allPosts.filter(p=>getStage(p.id,'post')==='posted').length;
+
+  // CSV cell escape
+  const q=v=>{const s=String(v??'');return s.includes(',')||s.includes('"')||s.includes('\n')?`"${s.replace(/"/g,'""')}"`:s;};
+  const row=(...cols)=>cols.map(q).join(',')+'\r\n';
+  const blank=()=>'\r\n';
+  const section=title=>`"=== ${title} ==="\r\n`;
+
+  let csv='';
+  // BOM for Thai/Lao characters in Excel
+  csv+='﻿';
+
+  // ── Header ──
+  csv+=row('MAXY Schedule Report');
+  csv+=row('ສ້າງວັນທີ',dateStr);
+  csv+=row('ທີມ','BIGBEAR & SCHOOLBUDDY');
+  csv+=blank();
+
+  // ── Quick Stats ──
+  csv+=section('ສະຖິຕິລວມ');
+  csv+=row('Episodes ທັງໝົດ','Clips ທັງໝົດ','% ຖ່າຍ/ຕັດ (avg)','% ໂພສ','ໂພສສຳເລັດ','ລໍ Unlock');
+  csv+=row(
+    allShoots.length, allPosts.length, avgPct+'%',
+    allPosts.length?Math.round(posted/allPosts.length*100)+'%':'0%',
+    `${posted}/${allPosts.length}`,
+    allPosts.filter(p=>!isPostUnlocked(p)).length
+  );
+  csv+=blank();
+
+  // ── Summary by Programme ──
+  csv+=section('ສະຫຼຸບ ຕາມລາຍການ');
+  csv+=row('ລາຍການ','Episodes','Clips ທັງໝົດ','% ຖ່າຍ/ຕັດ (avg)','% ໂພສ','ໂພສສຳເລັດ');
+  progList.filter(p=>allShoots.some(s=>s.programme_id===p.id)).forEach(p=>{
+    const pShoots=allShoots.filter(s=>s.programme_id===p.id);
+    const pPosts=pShoots.flatMap(s=>getPostsForShoot(s));
+    const pAvg=pShoots.length?Math.round(pShoots.reduce((a,s)=>a+getShootPct(s.id),0)/pShoots.length):0;
+    const pPosted=pPosts.filter(po=>getStage(po.id,'post')==='posted').length;
+    csv+=row(p.displayName,pShoots.length,pPosts.length,pAvg+'%',pPosts.length?Math.round(pPosted/pPosts.length*100)+'%':'0%',`${pPosted}/${pPosts.length}`);
+  });
+  csv+=blank();
+
+  // ── Detailed ──
+  csv+=section('ລາຍລະອຽດທຸກ Episode & Clip');
+  const detailHeaders=['ລາຍການ','ວັນຖ່າຍ','Clip #','Clip Label','Platform','ວັນໂພສ','ເວລາໂພສ','ຂັ້ນຕອນ ຖ່າຍ/ຕັດ','% ຖ່າຍ/ຕັດ','ສະຖານະ ໂພສ','ຖ່າຍ Done','ໂພສ Done','ພະນັກງານ ຖ່າຍ','ພະນັກງານ ໂພສ','ໝາຍເຫດ ຖ່າຍ','ໝາຍເຫດ ໂພສ'];
+  csv+=row(...detailHeaders);
+  buildExportRows().forEach(r=>csv+=row(...detailHeaders.map(h=>r[h]??'')));
+  csv+=blank();
+
+  // ── Staff ──
+  csv+=section('ພະນັກງານ');
+  csv+=row('ຊື່','Tasks ທັງໝົດ','Shoot Tasks','Post Tasks','% ຖ່າຍ/ຕັດ (avg)','ໂພສສຳເລັດ');
+  if(staffList.length){
+    staffList.forEach(st=>{
+      const myItems=items.filter(it=>getAssignedStaff(it.id).includes(st.id));
+      const shootItems=myItems.filter(i=>i.type==='shoot');
+      const postItems=myItems.filter(i=>i.type==='post');
+      const avg=shootItems.length?Math.round(shootItems.reduce((a,s)=>a+getShootPct(s.id),0)/shootItems.length):0;
+      const p=postItems.filter(po=>getStage(po.id,'post')==='posted').length;
+      csv+=row(st.name,myItems.length,shootItems.length,postItems.length,shootItems.length?avg+'%':'-',postItems.length?`${p}/${postItems.length}`:'-');
+    });
+  } else { csv+=row('ຍັງບໍ່ທັນເພີ່ມພະນັກງານ'); }
+  csv+=blank();
+
+  // ── Platform ──
+  csv+=section('Platform Breakdown');
+  csv+=row('Platform','Clips ທັງໝົດ','ໂພສແລ້ວ','Schedule','ລໍຖ້າ','% ໂພສ');
+  buildPlatformRows().forEach(r=>csv+=row(r.Platform,r['Clips ທັງໝົດ'],r['ໂພສແລ້ວ'],r['Schedule'],r['ລໍຖ້າ'],r['% ໂພສ']));
+
+  // Download
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const fname=`MAXY_Schedule_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
+  Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:fname}).click();
+  toast('✅ Export CSV ສຳເລັດ','ok');
+}
+
+// ── HTML REPORT ──
+function exportReport(){
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('lo-LA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const timeStr=now.toLocaleTimeString('lo-LA',{hour:'2-digit',minute:'2-digit'});
+
+  // ── Compute aggregates ──
+  const allShoots=items.filter(i=>i.type==='shoot').sort((a,b)=>a.scheduled_date.localeCompare(b.scheduled_date));
+  const allPosts=items.filter(i=>i.type==='post');
+  const avgShootPct=allShoots.length?Math.round(allShoots.reduce((a,s)=>a+getShootPct(s.id),0)/allShoots.length):0;
+  const postedCount=allPosts.filter(p=>getStage(p.id,'post')==='posted').length;
+  const postPct=allPosts.length?Math.round(postedCount/allPosts.length*100):0;
+
+  // ── Helpers ──
+  const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const pBar=(pct,color)=>`<div style="display:flex;align-items:center;gap:8px;min-width:120px">
+    <div style="flex:1;height:6px;background:#e8eaf0;border-radius:3px;overflow:hidden">
+      <div style="width:${pct}%;height:100%;background:${color};border-radius:3px"></div>
+    </div>
+    <span style="font-size:12px;font-weight:700;color:${color};min-width:34px;text-align:right">${pct}%</span>
+  </div>`;
+
+  const stageBadge=(label,color,bg)=>`<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${bg};color:${color};border:1px solid ${color}40">${esc(label)}</span>`;
+  const platBadge=(plat)=>{
+    const map={fb:['Facebook','#1877f2','#e8f0fe'],tiktok:['TikTok','#ee1d52','#fde8ec'],youtube:['YouTube','#ff0000','#fde8e8']};
+    const [l,c,bg]=map[plat]||[plat,'#666','#eee'];
+    return `<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:${bg};color:${c}">${l}</span>`;
+  };
+  const doneBadge=(v)=>v?`<span style="color:#16a34a;font-weight:700">✓ ສຳເລັດ</span>`:`<span style="color:#9ca3af">—</span>`;
+
+  const SHOOT_COLOR={'todo':'#9ca3af','shooting':'#d97706','editing':'#2563eb','review':'#7c3aed','ready':'#16a34a'};
+  const POST_COLOR={'waiting':'#9ca3af','scheduled':'#d97706','posted':'#16a34a'};
+
+  // ── Build episode cards ──
+  let episodesHtml='';
+  // Group by programme
+  const byProg={};
+  allShoots.forEach(sh=>{
+    const prog=findProg(sh.programme_id,sh.programmes);
+    if(!byProg[prog.displayName])byProg[prog.displayName]={color:prog.color,shoots:[]};
+    byProg[prog.displayName].shoots.push(sh);
+  });
+
+  Object.entries(byProg).forEach(([progName,{color,shoots}])=>{
+    episodesHtml+=`
+    <div class="prog-section">
+      <div class="prog-header" style="border-left:4px solid ${color}">
+        <div class="prog-header-left">
+          <div class="prog-dot" style="background:${color}"></div>
+          <h3>${esc(progName)}</h3>
+          <span class="prog-count">${shoots.length} episode${shoots.length>1?'s':''}</span>
+        </div>
+      </div>`;
+
+    shoots.forEach(sh=>{
+      const pct=getShootPct(sh.id);
+      const stageId=getStage(sh.id,'shoot');
+      const stageInfo=getShootStageInfo(stageId);
+      const stageColor=SHOOT_COLOR[stageId]||'#666';
+      const shootMeta=parseComment(statusMap[sh.id]?.comment);
+      const shootStaff=shootMeta.staff.map(sid=>staffList.find(s=>s.id===sid)?.name).filter(Boolean).join(', ')||'—';
+      const posts=getPostsForShoot(sh);
+      const postDoneCount=posts.filter(p=>getStage(p.id,'post')==='posted').length;
+      const isShootDone=!!statusMap[sh.id]?.done;
+
+      // group posts by clip
+      const clipMap={};
+      posts.forEach(p=>{
+        const m=parseNote(p.note);
+        const key=`${m.clip||1}__${p.scheduled_date}`;
+        if(!clipMap[key])clipMap[key]={clipNum:m.clip||1,date:p.scheduled_date,label:m.label||'',rows:[]};
+        if(!clipMap[key].label&&m.label)clipMap[key].label=m.label;
+        clipMap[key].rows.push({item:p,meta:m});
+      });
+
+      episodesHtml+=`
+      <div class="ep-block">
+        <div class="ep-shoot-row">
+          <div class="ep-shoot-left">
+            <span class="ep-type-badge shoot-type">🎬 Shoot</span>
+            <span class="ep-date">${sh.scheduled_date}</span>
+            ${shootStaff!=='—'?`<span class="ep-staff">👤 ${esc(shootStaff)}</span>`:''}
+          </div>
+          <div class="ep-shoot-right">
+            ${pBar(pct,stageColor)}
+            ${stageBadge(stageInfo.label,stageColor,stageColor+'1a')}
+            ${doneBadge(isShootDone)}
+          </div>
+        </div>
+        ${shootMeta.text?`<div class="ep-comment">💬 ${esc(shootMeta.text)}</div>`:''}`;
+
+      if(Object.keys(clipMap).length){
+        episodesHtml+=`<div class="clips-wrap">`;
+        Object.keys(clipMap).sort((a,b)=>{const[an,ad]=a.split('__'),[bn,bd]=b.split('__');return ad.localeCompare(bd)||parseInt(an)-parseInt(bn);}).forEach(key=>{
+          const cg=clipMap[key];
+          const clipTitle=cg.label?`${esc(cg.label)} — Clip ${cg.clipNum}`:`Clip ${cg.clipNum}`;
+          episodesHtml+=`
+          <div class="clip-block">
+            <div class="clip-block-head">
+              <span class="clip-title-text">📤 ${clipTitle}</span>
+              <span class="clip-date">📅 ${cg.date}`;
+          if(cg.rows[0]?.meta.postTime) episodesHtml+=` &nbsp;⏰ ${cg.rows[0].meta.postTime}`;
+          episodesHtml+=`</span>
+            </div>`;
+          cg.rows.forEach(({item:p,meta:m})=>{
+            const unlocked=isPostUnlocked(p);
+            const postStageId=getStage(p.id,'post');
+            const postStageInfo=getPostStageInfo(postStageId);
+            const postColor=POST_COLOR[postStageId]||'#666';
+            const postMeta=parseComment(statusMap[p.id]?.comment);
+            const postStaff=postMeta.staff.map(sid=>staffList.find(s=>s.id===sid)?.name).filter(Boolean).join(', ')||'—';
+            const pdone=!!statusMap[p.id]?.done;
+            episodesHtml+=`
+            <div class="clip-plat-row">
+              <div class="clip-row-left">
+                ${platBadge(m.platform)}
+                ${postStaff!=='—'?`<span class="ep-staff">👤 ${esc(postStaff)}</span>`:''}
+              </div>
+              <div class="clip-row-right">
+                ${unlocked?stageBadge(postStageInfo.label,postColor,postColor+'1a'):stageBadge('🔒 ລໍຖ້າ','#9ca3af','#f3f4f6')}
+                ${doneBadge(pdone)}
+              </div>
+            </div>
+            ${postMeta.text?`<div class="clip-comment">💬 ${esc(postMeta.text)}</div>`:''}`;
+          });
+          episodesHtml+=`</div>`;
+        });
+        episodesHtml+=`</div>`;
+      }
+      episodesHtml+=`</div>`;
+    });
+    episodesHtml+=`</div>`;
+  });
+
+  // ── Staff section ──
+  let staffHtml='';
+  if(staffList.length){
+    staffList.forEach(st=>{
+      const myItems=items.filter(it=>getAssignedStaff(it.id).includes(st.id));
+      const shootItems=myItems.filter(i=>i.type==='shoot');
+      const postItems=myItems.filter(i=>i.type==='post');
+      const avgPct=shootItems.length?Math.round(shootItems.reduce((a,sh)=>a+getShootPct(sh.id),0)/shootItems.length):0;
+      const posted=postItems.filter(p=>getStage(p.id,'post')==='posted').length;
+      const ini=st.name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      staffHtml+=`
+      <div class="staff-card">
+        <div class="staff-av" style="background:${st.color}">${ini}</div>
+        <div class="staff-info">
+          <div class="staff-name">${esc(st.name)}</div>
+          <div class="staff-meta">${myItems.length} tasks</div>
+        </div>
+        <div class="staff-stats">
+          ${shootItems.length?`<div class="staff-stat-item"><span class="staff-stat-lbl">🎬 ຖ່າຍ/ຕັດ</span>${pBar(avgPct,'#2563eb')}</div>`:''}
+          ${postItems.length?`<div class="staff-stat-item"><span class="staff-stat-lbl">📤 ໂພສ</span>${pBar(postItems.length?Math.round(posted/postItems.length*100):0,'#16a34a')}</div>`:''}
+        </div>
+      </div>`;
+    });
+  } else {
+    staffHtml='<p class="no-data">ຍັງບໍ່ທັນເພີ່ມພະນັກງານ</p>';
+  }
+
+  // ── Platform summary ──
+  const platData=buildPlatformRows();
+  let platHtml=platData.map(r=>{
+    const pct=parseInt(r['% ໂພສ'])||0;
+    const c=r.Platform==='Facebook'?'#1877f2':r.Platform==='TikTok'?'#ee1d52':'#ff0000';
+    return `<div class="plat-card">
+      <div class="plat-name" style="color:${c}">${r.Platform}</div>
+      ${pBar(pct,c)}
+      <div class="plat-nums">
+        <span class="plat-num-item" style="color:#16a34a">✓ ${r['ໂພສແລ້ວ']}</span>
+        <span class="plat-num-item" style="color:#d97706">📅 ${r['Schedule']}</span>
+        <span class="plat-num-item" style="color:#9ca3af">🔒 ${r['ລໍຖ້າ']}</span>
+        <span class="plat-num-item">/ ${r['Clips ທັງໝົດ']}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const html=`<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MAXY Report · ${dateStr}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&family=Noto+Sans+Lao+Looped:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f8f9fc;--surface:#ffffff;--surface2:#f3f4f8;
+  --border:#e4e6ef;--border2:#d0d3e8;
+  --text:#1a1b2e;--text2:#4a4b6a;--text3:#9a9bb8;
+  --accent:#5b50d6;--accent-bg:#f0eeff;
+  --green:#16a34a;--green-bg:#f0fdf4;
+  --amber:#d97706;--amber-bg:#fffbeb;
+  --red:#dc2626;--red-bg:#fef2f2;
+  --blue:#2563eb;--blue-bg:#eff6ff;
+  --radius:10px;--radius-lg:16px;
+  --font:'Noto Sans Lao',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;}
+
+/* PRINT BAR */
+.print-bar{background:var(--accent);color:#fff;padding:12px 32px;display:flex;align-items:center;justify-content:space-between;font-size:13px;position:sticky;top:0;z-index:10;}
+.print-bar b{font-weight:600;}
+.print-btn{background:#fff;color:var(--accent);border:none;border-radius:8px;padding:7px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);}
+.print-btn:hover{background:#f0eeff;}
+
+/* LAYOUT */
+.page{max-width:960px;margin:0 auto;padding:32px 24px 64px;}
+
+/* HEADER */
+.report-header{margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid var(--border);}
+.report-logo{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.logo-mark{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;}
+.report-title{font-size:26px;font-weight:700;color:var(--text);}
+.report-sub{font-size:14px;color:var(--text3);margin-top:2px;}
+.report-date{font-size:13px;color:var(--text3);margin-top:8px;}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:36px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 18px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.c-accent::before{background:var(--accent);}
+.stat-card.c-blue::before{background:var(--blue);}
+.stat-card.c-green::before{background:var(--green);}
+.stat-card.c-amber::before{background:var(--amber);}
+.stat-num{font-size:34px;font-weight:700;line-height:1;margin-bottom:6px;}
+.stat-card.c-accent .stat-num{color:var(--accent);}
+.stat-card.c-blue .stat-num{color:var(--blue);}
+.stat-card.c-green .stat-num{color:var(--green);}
+.stat-card.c-amber .stat-num{color:var(--amber);}
+.stat-lbl{font-size:12px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.6px;}
+.stat-sub{font-size:12px;color:var(--text3);margin-top:10px;}
+
+/* SECTIONS */
+.section{margin-bottom:40px;}
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid var(--border);}
+.section-icon{font-size:18px;}
+.section-title{font-size:17px;font-weight:700;color:var(--text);}
+.section-badge{font-size:11px;background:var(--accent-bg);color:var(--accent);padding:2px 10px;border-radius:20px;font-weight:600;}
+
+/* PROGRAMME SECTION */
+.prog-section{margin-bottom:28px;}
+.prog-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--border);border-bottom:none;}
+.prog-header-left{display:flex;align-items:center;gap:10px;}
+.prog-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.prog-header h3{font-size:15px;font-weight:700;color:var(--text);}
+.prog-count{font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;color:var(--text3);}
+
+/* EPISODE BLOCK */
+.ep-block{background:var(--surface);border:1px solid var(--border);border-top:none;padding:0;}
+.ep-block:last-child{border-radius:0 0 var(--radius) var(--radius);}
+.ep-shoot-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--green-bg);border-top:1px solid #bbf7d0;flex-wrap:wrap;gap:10px;}
+.ep-shoot-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.ep-shoot-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.ep-type-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.shoot-type{background:#dcfce7;color:#15803d;}
+.ep-date{font-size:13px;font-weight:600;color:var(--text2);}
+.ep-staff{font-size:12px;color:var(--text3);background:var(--surface2);padding:2px 8px;border-radius:20px;border:1px solid var(--border);}
+.ep-comment{font-size:12px;color:var(--text3);padding:6px 16px 8px;font-style:italic;border-top:1px solid var(--border2);background:var(--surface2);}
+
+/* CLIPS */
+.clips-wrap{padding:8px 12px;display:flex;flex-direction:column;gap:8px;}
+.clip-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.clip-block-head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.clip-title-text{font-size:13px;font-weight:600;color:var(--text);}
+.clip-date{font-size:12px;color:var(--text3);}
+.clip-plat-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;flex-wrap:wrap;gap:8px;}
+.clip-plat-row+.clip-plat-row{border-top:1px solid var(--border);}
+.clip-row-left{display:flex;align-items:center;gap:8px;}
+.clip-row-right{display:flex;align-items:center;gap:10px;}
+.clip-comment{font-size:11px;color:var(--text3);padding:4px 12px 6px;background:#fafafe;font-style:italic;}
+
+/* SUMMARY TABLE */
+.sum-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.sum-table th{background:var(--surface2);color:var(--text2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);}
+.sum-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);font-size:13px;vertical-align:middle;}
+.sum-table tr:last-child td{border-bottom:none;}
+.sum-table tr:hover td{background:var(--surface2);}
+
+/* STAFF CARDS */
+.staff-grid-r{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.staff-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;display:flex;flex-direction:column;gap:12px;}
+.staff-card-top{display:flex;align-items:center;gap:12px;}
+.staff-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;}
+.staff-name{font-size:14px;font-weight:700;}
+.staff-meta{font-size:12px;color:var(--text3);}
+.staff-stats{display:flex;flex-direction:column;gap:8px;}
+.staff-stat-item{display:flex;align-items:center;gap:10px;}
+.staff-stat-lbl{font-size:11px;color:var(--text3);min-width:90px;}
+
+/* PLATFORM CARDS */
+.plat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.plat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;display:flex;flex-direction:column;gap:10px;}
+.plat-name{font-size:15px;font-weight:700;}
+.plat-nums{display:flex;gap:12px;flex-wrap:wrap;}
+.plat-num-item{font-size:12px;font-weight:600;}
+
+.no-data{font-size:13px;color:var(--text3);font-style:italic;padding:16px 0;}
+
+/* PAGE BREAK */
+.page-break{page-break-before:always;}
+
+/* FOOTER */
+.report-footer{text-align:center;color:var(--text3);font-size:11px;margin-top:48px;padding-top:20px;border-top:1px solid var(--border);}
+
+@media print{
+  .print-bar{display:none!important;}
+  body{background:#fff;}
+  .stat-card,.ep-block,.clip-block,.staff-card,.plat-card,.sum-table{break-inside:avoid;}
+  .prog-section{break-inside:avoid;}
+}
+@media(max-width:600px){
+  .stat-grid{grid-template-columns:repeat(2,1fr);}
+  .plat-grid{grid-template-columns:1fr;}
+  .ep-shoot-row,.ep-shoot-right{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<div class="print-bar">
+  <span>📄 MAXY Schedule Report &nbsp;·&nbsp; ສ້າງ: ${dateStr} ${timeStr}</span>
+  <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+</div>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="report-header">
+    <div class="report-logo">
+      <div class="logo-mark">🎬</div>
+      <div>
+        <div class="report-title">MAXY Schedule Report</div>
+        <div class="report-sub">BIGBEAR &amp; SCHOOLBUDDY Content Team</div>
+      </div>
+    </div>
+    <div class="report-date">📅 ສ້າງວັນທີ: <b>${dateStr}</b> ·  ⏰ ${timeStr}</div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stat-grid">
+    <div class="stat-card c-accent">
+      <div class="stat-num">${allShoots.length}</div>
+      <div class="stat-lbl">Episodes ທັງໝົດ</div>
+      <div class="stat-sub">${allPosts.length} clips ລວມ</div>
+    </div>
+    <div class="stat-card c-blue">
+      <div class="stat-num">${avgShootPct}%</div>
+      <div class="stat-lbl">% ຖ່າຍ/ຕັດ (avg)</div>
+      <div class="stat-sub">${allShoots.filter(s=>getShootPct(s.id)===100).length} episodes ພ້ອມໂພສ</div>
+    </div>
+    <div class="stat-card c-green">
+      <div class="stat-num">${postPct}%</div>
+      <div class="stat-lbl">% ໂພສ</div>
+      <div class="stat-sub">${postedCount} / ${allPosts.length} clips ໂພສສຳເລັດ</div>
+    </div>
+    <div class="stat-card c-amber">
+      <div class="stat-num">${allPosts.filter(p=>getStage(p.id,'post')==='scheduled').length}</div>
+      <div class="stat-lbl">Clips Scheduled</div>
+      <div class="stat-sub">${allPosts.filter(p=>!isPostUnlocked(p)).length} clips ລໍຖ້າ unlock</div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-icon">📊</span>
+      <span class="section-title">ສະຫຼຸບ ຕາມລາຍການ</span>
+    </div>
+    <table class="sum-table">
+      <thead><tr><th>ລາຍການ</th><th>Episodes</th><th>Clips</th><th>% ຖ່າຍ/ຕັດ</th><th>% ໂພສ</th><th>ໂພສສຳເລັດ</th></tr></thead>
+      <tbody>
+      ${progList.filter(p=>allShoots.some(s=>s.programme_id===p.id)).map(p=>{
+        const pShoots=allShoots.filter(s=>s.programme_id===p.id);
+        const pPosts=pShoots.flatMap(s=>getPostsForShoot(s));
+        const pAvg=pShoots.length?Math.round(pShoots.reduce((a,s)=>a+getShootPct(s.id),0)/pShoots.length):0;
+        const pPosted=pPosts.filter(po=>getStage(po.id,'post')==='posted').length;
+        const pPostPct=pPosts.length?Math.round(pPosted/pPosts.length*100):0;
+        return `<tr>
+          <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:8px;vertical-align:middle"></span><b>${esc(p.displayName)}</b></td>
+          <td style="text-align:center">${pShoots.length}</td>
+          <td style="text-align:center">${pPosts.length}</td>
+          <td>${pBar(pAvg,'#2563eb')}</td>
+          <td>${pBar(pPostPct,'#16a34a')}</td>
+          <td style="text-align:center;font-weight:600;color:#16a34a">${pPosted}/${pPosts.length}</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- EPISODES DETAIL -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-icon">📋</span>
+      <span class="section-title">ລາຍລະອຽດທຸກ Episode</span>
+      <span class="section-badge">${allShoots.length} episodes</span>
+    </div>
+    ${episodesHtml||'<p class="no-data">ບໍ່ມີຂໍ້ມູນ</p>'}
+  </div>
+
+  <!-- PLATFORM -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-icon">📱</span>
+      <span class="section-title">Platform Breakdown</span>
+    </div>
+    <div class="plat-grid">${platHtml||'<p class="no-data">ບໍ່ມີຂໍ້ມູນ</p>'}</div>
+  </div>
+
+  <!-- STAFF -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-icon">👤</span>
+      <span class="section-title">ພະນັກງານ</span>
+      <span class="section-badge">${staffList.length} ຄົນ</span>
+    </div>
+    ${staffList.length
+      ? `<div class="staff-grid-r">${staffHtml}</div>`
+      : '<p class="no-data">ຍັງບໍ່ທັນເພີ່ມພະນັກງານ</p>'}
+  </div>
+
+  <div class="report-footer">
+    ສ້າງໂດຍ MAXY Schedule System · ${dateStr} · ຂໍ້ມູນທັງໝົດ ${allShoots.length} episodes, ${allPosts.length} clips
+  </div>
+
+</div>
+</body>
+</html>`;
+
+  const win=window.open('','_blank');
+  if(!win){toast('❌ Pop-up ຖືກບລ໋ອກ — ອະນຸຍາດ pop-up ກ່ອນ','err');return;}
+  win.document.write(html);
+  win.document.close();
+  toast('✅ ເປີດ Report ໃນ tab ໃໝ່','ok');
+}
+
+init();
+</script>
+</body>
+</html>
