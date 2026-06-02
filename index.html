@@ -503,7 +503,7 @@ const SEED=[
 ];
 
 let items=[],statusMap={},progList=[],progMap={};
-let staffList=JSON.parse(localStorage.getItem('maxy_staff')||'[]');
+let staffList=[];
 let curTab='cal',curFilter='all',isAdmin=false,detailItemId=null;
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(); // local month 0-11
 
@@ -597,7 +597,7 @@ function postChipHtml(postItem){
 // ── INIT ──
 async function init(){
   setSyncText('ກຳລັງເຊື່ອມ...');
-  await loadProgs();await seedIfEmpty();await loadAll();
+  await loadProgs();await loadStaff();await seedIfEmpty();await loadAll();
   setSyncText('Synced ✓');setInterval(loadAll,15000);
 }
 async function loadProgs(){
@@ -610,6 +610,12 @@ async function loadProgs(){
   for(const s of seeds){const{data:d}=await sb.from('programmes').insert(s).select().single();if(d){progMap[d.name]=d.id;progMap[d.id]=d.id;}}
   await loadProgs();
 }
+async function loadStaff(){
+  const{data,error}=await sb.from('staff').select('*').order('created_at');
+  if(!error&&data) staffList=data.map(s=>({id:s.id,name:s.name,color:s.color}));
+  if(isAdmin) renderStaffTable();
+}
+
 async function seedIfEmpty(){
   const{count}=await sb.from('schedule_items').select('*',{count:'exact',head:true});
   if(count>0)return;
@@ -629,6 +635,7 @@ async function loadAll(){
   const{data:st}=await sb.from('item_status').select('*');
   statusMap={};(st||[]).forEach(s=>statusMap[s.item_id]=s);
   items=raw||[];
+  await loadStaff();
   setSyncText('Synced '+new Date().toLocaleTimeString('lo'));
   updateStats();rebuildFilterButtons();
   if(curTab==='cal')renderCal();else if(curTab==='list')renderList();else renderTeam();
@@ -1090,21 +1097,28 @@ async function deleteProgramme(pid){
   toast('🗑 ລຶບ programme','');
 }
 
-// ── ADMIN: STAFF (localStorage) ──
-function saveStaffLocal(){localStorage.setItem('maxy_staff',JSON.stringify(staffList));}
-function addStaff(){
+// ── ADMIN: STAFF (Supabase cloud) ──
+async function addStaff(){
   const name=document.getElementById('st-name').value.trim();
   const color=document.getElementById('st-color').value;
   if(!name){toast('❌ ໃສ່ຊື່','err');return;}
-  staffList.push({id:'st_'+Date.now().toString(36),name,color});
-  saveStaffLocal();
+  const{data,error}=await sb.from('staff').insert({name,color}).select().single();
+  if(error||!data){toast('❌ ບໍ່ສາມາດເພີ່ມ: '+( error?.message||''),'err');return;}
+  staffList.push({id:data.id,name:data.name,color:data.color});
   document.getElementById('st-name').value='';
   document.getElementById('st-color').value=STAFF_PALETTE[staffList.length%STAFF_PALETTE.length];
-  renderStaffTable();toast(`✅ ເພີ່ມ "${name}",'ok`);
+  renderStaffTable();
+  toast(`✅ ເພີ່ມ "${name}" ສຳເລັດ`,'ok');
 }
-function deleteStaff(id){
+async function deleteStaff(id){
   if(!confirm('ລຶບພະນັກງານ?'))return;
-  staffList=staffList.filter(s=>s.id!==id);saveStaffLocal();renderStaffTable();toast('🗑 ລຶບ','');
+  const{error}=await sb.from('staff').delete().eq('id',id);
+  if(error){toast('❌ ລຶບບໍ່ສຳເລັດ','err');return;}
+  staffList=staffList.filter(s=>s.id!==id);
+  renderStaffTable();
+  // refresh team view if open
+  if(curTab==='team') renderTeam();
+  toast('🗑 ລຶບພະນັກງານແລ້ວ','');
 }
 function renderStaffTable(){
   let html='';
